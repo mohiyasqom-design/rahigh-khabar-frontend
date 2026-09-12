@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+	html {
+		/* lang="fa" and dir="rtl" are set on <html> in app/layout.tsx, which is
+		   what Tailwind's logical utilities and rtl:/ltr: variants resolve against. */
+		-webkit-text-size-adjust: 100%;
+	}
+
+	body {
+		/* Approved base surface: paper background, ink text (see tailwind.config.ts). */
+		@apply bg-paper text-ink antialiased;
+	}
+
+	::selection {
+		@apply bg-accent text-paper;
+	}
+}
+
+@layer utilities {
+	/* The homepage "آخرین اخبار" rail scrolls horizontally but hides its
+	   scrollbar, matching the mockup's `.no-scrollbar` helper. Scrolling itself
+	   stays fully functional (wheel, touch, and keyboard via the focusable
+	   links inside), so nothing becomes unreachable. */
+	.no-scrollbar {
+		-ms-overflow-style: none;
+		scrollbar-width: none;
+	}
+
+	.no-scrollbar::-webkit-scrollbar {
+		display: none;
+	}
+}
