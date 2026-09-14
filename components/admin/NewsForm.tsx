@@ -273,6 +273,7 @@ export default function NewsForm({
 
 		if (!validate()) {
 			setFailure("فرم کامل نیست؛ موارد مشخص‌شده را اصلاح کنید.")
+			setOrphanUploadId(null)
 			return
 		}
 
