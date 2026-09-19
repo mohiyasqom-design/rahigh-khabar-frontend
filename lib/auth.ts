@@ -29,7 +29,9 @@
  * and the note in README.
  */
 import { adminFetch, adminJson } from "@/lib/admin-api"
+import { apiFetch, getApiBaseUrl } from "@/lib/api"
 import { isUnauthorized } from "@/lib/errors"
+import type { Session } from "@/types/auth"
 import type { AdminUser } from "@/types/user"
 
 /** Credentials accepted by `POST /auth/login` (`loginSchema`, strict). */
@@ -87,4 +89,102 @@ export async function getCurrentAdmin(): Promise<AdminUser | null> {
 
 		throw error
 	}
+}
+
+
+/* -------------------------------------------------------------------------- */
+/* Stage 10 Part 2 — site visitors (Google sign-in)                            */
+/* -------------------------------------------------------------------------- */
+/*
+ * A SEPARATE ACCOUNT FROM THE ADMIN ONE ABOVE. Visitors live in
+ * `regular_users`, authenticate with Google and hold the `rk_user` cookie;
+ * admins live in `users` and hold `rk_auth`. The backend guards are disjoint,
+ * and so are these helpers.
+ *
+ * WHAT WAS WRONG BEFORE:
+ *   - a `next/headers` `getSession()` read a cookie named `auth` that the
+ *     backend never sets, on the Next.js origin, which never receives the API
+ *     cookie in the first place. It could only ever return null.
+ *   - `updateProfile` posted a `FormData` (with an avatar file) to
+ *     `PATCH /users/me`, which accepts JSON only — a guaranteed 415.
+ *   - every call used a bare `fetch` against `process.env.NEXT_PUBLIC_API_URL`,
+ *     bypassing the origin pinning in `lib/api.ts`, and threw plain `Error`s
+ *     that destroyed the status code the UI needs.
+ *
+ * Everything here now goes through `apiFetch`, so failures arrive as `ApiError`
+ * with the backend's own Persian message and its HTTP status.
+ */
+
+/** A session answer must never be cached, by the browser or by Next.js. */
+const noStore = { cache: "no-store" } as const
+
+/**
+ * Absolute URL of the Google sign-in entry point, or null when
+ * `NEXT_PUBLIC_API_URL` is missing or invalid.
+ *
+ * This is a full-page navigation, not a fetch: the OAuth flow ends in a
+ * redirect from Google back to the API, which then sets the cookie and sends
+ * the browser to the site. Returning null lets the caller say so instead of
+ * rendering a button that goes nowhere.
+ */
+export function googleLoginUrl(): string | null {
+	try {
+		return new URL("auth/google", getApiBaseUrl()).toString()
+	} catch {
+		return null
+	}
+}
+
+/** The signed-in visitor, or null when there is no valid visitor session. */
+export async function getVisitorSession(): Promise<Session | null> {
+	try {
+		return await apiFetch<Session>("users/me", noStore)
+	} catch (error) {
+		if (isUnauthorized(error)) {
+			return null
+		}
+
+		// A 500 or a network failure is not "signed out"; let the caller decide.
+		throw error
+	}
+}
+
+/**
+ * Advisory availability check for the onboarding form.
+ *
+ * The unique index is the real gate: two tabs can pass this check and still
+ * lose the race, which the backend answers with 409 `USERNAME_TAKEN`.
+ */
+export async function checkUsernameAvailable(username: string): Promise<boolean> {
+	const search = new URLSearchParams({ username })
+
+	const result = await apiFetch<{ username: string; available: boolean }>(
+		`users/check-username?${search.toString()}`,
+		noStore,
+	)
+
+	return result.available
+}
+
+/**
+ * Updates the visitor profile. Send only what changed; the backend requires at
+ * least one field and rejects anything outside `username` / `displayName`.
+ *
+ * `username` is write-once server-side (409 `USERNAME_ALREADY_SET`).
+ */
+export function updateVisitorProfile(input: {
+	username?: string
+	displayName?: string
+}): Promise<Session> {
+	return apiFetch<Session>("users/me", {
+		...noStore,
+		method: "PATCH",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify(input),
+	})
+}
+
+/** Clears the visitor cookie. Idempotent: 204 even when already anonymous. */
+export async function visitorLogout(): Promise<void> {
+	await apiFetch<void>("users/logout", { ...noStore, method: "POST" })
 }

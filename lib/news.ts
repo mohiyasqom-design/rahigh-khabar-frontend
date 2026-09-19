@@ -24,6 +24,8 @@ import { publicCache } from "@/lib/cache"
 import type { Paginated } from "@/types/api"
 import type {
 	AdminNewsItem,
+	Comment,
+	LikeState,
 	NewsDetail,
 	NewsListItem,
 	NewsStatus,
@@ -244,5 +246,70 @@ export function changeNewsStatus(
 		`admin/news/${encodeURIComponent(id)}/status`,
 		"POST",
 		{ status },
+	)
+}
+
+
+/* -------------------------------------------------------------------------- */
+/* Stage 10 Part 2 — likes and comments                                        */
+/* -------------------------------------------------------------------------- */
+/*
+ * These four helpers go through `apiFetch`, like every other call in this file.
+ * The previous versions called a bare `fetch(`${getApiBaseUrl()}/…`)` without
+ * importing `getApiBaseUrl` — a compile error — and also double-slashed the
+ * path, because `getApiBaseUrl()` already ends in "/". They then threw
+ * `new Error("Like failed: 401")`, which discards the status code and the
+ * backend's Persian message, so the UI could not tell "please sign in" from
+ * "the server is down".
+ *
+ * ALL FOUR ARE UNCACHED. A like count, the viewer's own `liked` flag and a
+ * comment list all change per visitor and per second; serving them from the
+ * Next.js Data Cache would show one reader another reader's state.
+ */
+const liveRead = { cache: "no-store" } as const
+
+/** Current like total plus whether THIS visitor liked it. */
+export function getLikeState(newsId: string): Promise<LikeState> {
+	return apiFetch<LikeState>(
+		`news/${encodeURIComponent(newsId)}/likes`,
+		liveRead,
+	)
+}
+
+/** Likes or unlikes. The response carries the authoritative new total. */
+export function toggleLike(newsId: string): Promise<LikeState> {
+	return apiFetch<LikeState>(`news/${encodeURIComponent(newsId)}/like`, {
+		...liveRead,
+		method: "POST",
+	})
+}
+
+/** Posts a comment and returns the stored (sanitised) comment. */
+export function createComment(
+	newsId: string,
+	content: string,
+): Promise<Comment> {
+	return apiFetch<Comment>(`news/${encodeURIComponent(newsId)}/comments`, {
+		...liveRead,
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify({ content }),
+	})
+}
+
+/** One page of comments, newest first. */
+export function listComments(
+	newsId: string,
+	page = 1,
+	pageSize = 20,
+): Promise<Paginated<Comment>> {
+	const search = new URLSearchParams({
+		page: String(clamp(page, 1, MAX_PAGE)),
+		pageSize: String(clamp(pageSize, 1, MAX_PAGE_SIZE)),
+	})
+
+	return apiFetch<Paginated<Comment>>(
+		`news/${encodeURIComponent(newsId)}/comments?${search.toString()}`,
+		liveRead,
 	)
 }

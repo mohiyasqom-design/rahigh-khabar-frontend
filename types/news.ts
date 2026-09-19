@@ -32,19 +32,35 @@ export interface NewsListItem {
 /**
  * `GET /news/:slug` — the list shape plus the article body and SEO overrides.
  *
- * `body` is stored as plain `String @db.Text` and is returned exactly as the
- * editor typed it: the backend declares no markup format and performs no HTML
- * sanitisation. It is therefore rendered as TEXT, never with
- * `dangerouslySetInnerHTML` (see `app/news/[slug]/page.tsx`).
+ * `body` is a single `String @db.Text` column with no format marker. Since
+ * Stage 10 the admin editor writes rich-text HTML and the backend runs it
+ * through `sanitizeNewsBody` on every write (fixed tag allow-list, https-only
+ * URLs, no event handlers, anchored iframe host list). Articles created before
+ * that are still plain text, so the page decides per article with
+ * `looksLikeHtml` from `lib/format.ts` and renders legacy bodies as text.
  *
  * `updatedAt` is intentionally absent: the service selects it, but the Fastify
  * response schema is `additionalProperties: false` and does not list it, so it
  * is stripped before it reaches the wire.
  */
 export interface NewsDetail extends NewsListItem {
+	/**
+	 * Added in Stage 10. Likes and comments are addressed by id while the URL
+	 * carries only the slug, so the detail payload now exposes it.
+	 */
+	id: string
 	body: string
 	seoTitle: string | null
 	metaDescription: string | null
+	/** Server-side totals; safe to render on first paint. */
+	likesCount: number
+	commentsCount: number
+	/**
+	 * ALWAYS FALSE for a cached read. This route is statically revalidated, so a
+	 * per-visitor flag baked into the HTML would be served to every reader;
+	 * `LikeButton` re-reads the real value from `GET /news/:id/likes` after mount.
+	 */
+	likedByCurrentUser: boolean
 }
 
 /* -------------------------------------------------------------------------- */
@@ -60,6 +76,8 @@ export type NewsStatus =
 	| "DRAFT"
 	| "IN_REVIEW"
 	| "PUBLISHED"
+	/** Stage 10 Part 5: queued for automatic publication at `scheduledFor`. */
+	| "SCHEDULED"
 	| "ARCHIVED"
 	| "REJECTED"
 
@@ -98,6 +116,13 @@ export interface AdminNewsItem {
 	categories: Category[]
 	seoTitle: string | null
 	metaDescription: string | null
+	/**
+	 * Stage 10 Part 5. ISO-8601 (with offset) moment the scheduler will publish
+	 * the article, or null when it is not queued. The backend clears it the
+	 * instant the article is published or pulled back to a draft, so a non-null
+	 * value here always means "still waiting".
+	 */
+	scheduledFor: string | null
 	createdAt: string
 	updatedAt: string
 }
@@ -133,6 +158,16 @@ export interface NewsWriteInput {
 	seoTitle?: string | null
 	/** Up to 500 characters, or null to clear. */
 	metaDescription?: string | null
+	/**
+	 * Stage 10 Part 5 — the only status-adjacent field a write may carry.
+	 *
+	 * MUST be an ISO-8601 string WITH an offset (`datetime({ offset: true })`);
+	 * the value of a `datetime-local` input (`2026-03-21T08:30`) is rejected
+	 * with a 400, so the form converts it before sending. Setting it queues an
+	 * unpublished article (status becomes SCHEDULED); sending null clears the
+	 * queue and returns a SCHEDULED article to DRAFT.
+	 */
+	scheduledFor?: string | null
 }
 
 /**
@@ -156,3 +191,39 @@ export const NEWS_FIELD_LIMITS = {
 
 /** The slug pattern enforced by the backend's `slugSchema`. */
 export const NEWS_SLUG_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/
+
+/* -------------------------------------------------------------------------- */
+/* Stage 10 Part 2 — likes and comments                                        */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * One comment from `GET /news/:id/comments`, field-for-field from the backend's
+ * `commentSchema`.
+ *
+ * `username` and `avatarUrl` are NULLABLE, not optional: a visitor has no
+ * username until onboarding completes and no avatar unless Google supplied one.
+ * The previous `username: string` / `avatarUrl?: string` shape made a real
+ * response a type error at every call site.
+ *
+ * `content` is plain text — the backend strips every tag on write — so it is
+ * rendered as text, never as markup.
+ */
+export interface Comment {
+	id: string
+	content: string
+	/** ISO-8601 timestamp. */
+	createdAt: string
+	user: {
+		id: string
+		username: string | null
+		displayName: string
+		avatarUrl: string | null
+	}
+}
+
+/** Response of `POST /news/:id/like` and `GET /news/:id/likes`. */
+export interface LikeState {
+	liked: boolean
+	/** Authoritative total. The UI never derives it by adding or subtracting. */
+	likesCount: number
+}

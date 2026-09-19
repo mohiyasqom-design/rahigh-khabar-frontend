@@ -14,7 +14,14 @@ import { apiFetch } from "@/lib/api"
 import { publicCache } from "@/lib/cache"
 import type { Category } from "@/types/category"
 
-/** All categories, in backend order. Throws if the backend is unreachable. */
+/**
+ * All categories, in backend order. Throws if the backend is unreachable.
+ *
+ * STAGE 10 — "backend order" now means `order` ascending (then name), which is
+ * the navigation order the editors control from the admin API. Nothing in the
+ * frontend re-sorts this array; if the menu is in the wrong order, the fix is
+ * an `order` value, not a component.
+ */
 export async function getCategories(): Promise<Category[]> {
 	return apiFetch<Category[]>("categories", publicCache)
 }

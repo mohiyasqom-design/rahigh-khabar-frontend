@@ -11,6 +11,9 @@ const TONE: Record<NewsStatus, string> = {
 	DRAFT: "border-border bg-paper text-muted-dark",
 	IN_REVIEW: "border-link/40 bg-link/10 text-link",
 	PUBLISHED: "border-accent/40 bg-accent/10 text-accent",
+	// Queued, not live: a distinct tone so a scheduled article is never
+	// mistaken for a published one in a long list.
+	SCHEDULED: "border-link bg-link/15 text-link",
 	ARCHIVED: "border-border-strong bg-white text-muted-dark",
 	REJECTED: "border-accent bg-accent text-paper",
 }

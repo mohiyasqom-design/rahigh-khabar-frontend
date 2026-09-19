@@ -33,3 +33,103 @@
 		display: none;
 	}
 }
+
+/*
+ * Article body typography.
+ *
+ * WHY THIS IS HAND-WRITTEN: the rich-text renderer originally used Tailwind
+ * `prose-*` utilities, which only exist with the @tailwindcss/typography
+ * plugin. `tailwind.config.ts` ships `plugins: []`, so every one of those
+ * classes was silently dropped and the body rendered as unstyled HTML. Adding
+ * the plugin would mean a new dependency; these rules are the whole of what the
+ * sanitiser's tag allow-list can produce, so they cover it completely.
+ *
+ * RTL: spacing uses logical properties (padding-inline-start, border-inline-*)
+ * so lists and quotes indent on the correct side under dir="rtl".
+ */
+@layer components {
+	.news-body > * + * {
+		margin-block-start: 1.25rem;
+	}
+
+	.news-body h2 {
+		@apply text-xl font-bold tracking-headline text-ink;
+		margin-block-start: 2rem;
+	}
+
+	.news-body h3 {
+		@apply text-lg font-semibold text-ink;
+		margin-block-start: 1.5rem;
+	}
+
+	.news-body p {
+		@apply text-[17px] leading-[2] text-ink;
+	}
+
+	.news-body strong {
+		@apply font-semibold text-ink;
+	}
+
+	.news-body em {
+		@apply italic;
+	}
+
+	.news-body u {
+		@apply underline;
+	}
+
+	.news-body a {
+		@apply text-link underline transition-opacity hover:opacity-80;
+	}
+
+	.news-body ul,
+	.news-body ol {
+		padding-inline-start: 1.5rem;
+	}
+
+	.news-body ul {
+		@apply list-disc;
+	}
+
+	.news-body ol {
+		@apply list-decimal;
+	}
+
+	.news-body li {
+		@apply leading-[2];
+		margin-block-end: 0.25rem;
+	}
+
+	.news-body blockquote {
+		@apply border-accent italic text-muted-dark;
+		border-inline-start-width: 4px;
+		padding-inline-start: 1rem;
+	}
+
+	/* Tables can exceed the column on a phone, so the wrapper scrolls instead
+	   of pushing the whole page sideways. */
+	.news-body table {
+		@apply w-full border-collapse text-sm;
+		display: block;
+		overflow-x: auto;
+	}
+
+	.news-body th,
+	.news-body td {
+		@apply border border-border px-3 py-2 text-start align-top;
+	}
+
+	.news-body th {
+		@apply bg-paper font-semibold;
+	}
+
+	.news-body img {
+		@apply h-auto max-w-full rounded-md;
+	}
+
+	.news-body iframe {
+		@apply w-full rounded-md border border-border;
+		aspect-ratio: 16 / 9;
+		height: auto;
+	}
+}

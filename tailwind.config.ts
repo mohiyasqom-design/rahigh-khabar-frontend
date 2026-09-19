@@ -22,7 +22,11 @@ import type { Config } from "tailwindcss"
  *
  * LAYOUT TOKENS
  *   max-w-shell   1180px   the site content column used across the mockup
- *   h-header      72px     main header row height
+ *   h-header      84px     main header row height (sm and up; 72px below it).
+ *                          Stage 10 raised it from 72px so the enlarged 64px
+ *                          logo keeps breathing room instead of touching the
+ *                          border.
+ *   h-nav         44px     desktop category row under the logo row
  *
  * TYPOGRAPHY
  *   font-sans is Vazirmatn, injected as the CSS variable --font-vazirmatn by
@@ -88,7 +92,8 @@ const config: Config = {
 				shell: "1180px",
 			},
 			height: {
-				header: "72px",
+				header: "84px",
+				nav: "44px",
 			},
 		},
 	},

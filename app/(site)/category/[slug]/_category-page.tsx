@@ -2,13 +2,20 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 
+import Breadcrumbs from "@/components/Breadcrumbs"
 import EmptyState from "@/components/EmptyState"
 import NewsCard from "@/components/NewsCard"
 import Pagination from "@/components/Pagination"
 import { getCategoryBySlug } from "@/lib/categories"
 import { formatPersianNumber } from "@/lib/format"
 import { CATEGORY_PAGE_SIZE, getNewsPage } from "@/lib/news"
-import { buildCategoryListingMetadata, buildNotFoundMetadata } from "@/lib/seo"
+import {
+	buildCategoryListingMetadata,
+	buildNotFoundMetadata,
+	categoryPath,
+	HOME_BREADCRUMB_NAME,
+	type BreadcrumbEntry,
+} from "@/lib/seo"
 
 /**
  * Shared implementation behind both category routes:
@@ -80,8 +87,25 @@ export default async function CategoryListing({
 			? `/category/${category.slug}`
 			: `/category/${category.slug}/page/${target}`
 
+	// "خانه > سیاست", plus the page number on pages 2+ so the trail never claims
+	// page 4 is the category's front page. Every crumb points at the URL that
+	// page is canonical to.
+	const trail: BreadcrumbEntry[] = [
+		{ name: HOME_BREADCRUMB_NAME, path: "/" },
+		{ name: category.name, path: categoryPath(category.slug) },
+	]
+
+	if (page > 1) {
+		trail.push({
+			name: `صفحهٔ ${formatPersianNumber(page)}`,
+			path: categoryPath(category.slug, page),
+		})
+	}
+
 	return (
 		<>
+			<Breadcrumbs trail={trail} />
+
 			<header className="mb-8 border-b border-border pb-6">
 				<div className="flex items-center gap-2">
 					<span className="h-6 w-1 shrink-0 bg-accent" aria-hidden="true" />

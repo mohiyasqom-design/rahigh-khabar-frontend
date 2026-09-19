@@ -124,6 +124,27 @@ export function toParagraphs(body: string): string[] {
 		.filter((paragraph) => paragraph.length > 0)
 }
 
+/**
+ * True when an article body is the rich-text HTML produced by the admin editor,
+ * false when it is legacy plain text.
+ *
+ * WHY A HEURISTIC AND NOT A FLAG: `News.body` is a single `String @db.Text`
+ * column with no format marker. Since Stage 10 the editor writes HTML and the
+ * backend sanitises it on write (`sanitizeNewsBody`), but every article created
+ * before that is still plain text. Assuming one format breaks the other: plain
+ * text sent through `dangerouslySetInnerHTML` loses all its line breaks, and
+ * HTML sent through `toParagraphs` shows raw tags to the reader.
+ *
+ * The test is deliberately narrow — it looks for an opening tag from the exact
+ * set the sanitiser allows — so a sentence that merely contains "<" or a
+ * mathematical comparison is still treated as text.
+ */
+export function looksLikeHtml(body: string): boolean {
+	return /<(?:p|br|h2|h3|ul|ol|li|table|thead|tbody|tr|td|th|blockquote|img|iframe|a|strong|em|b|i|u)\b[^>]*>/i.test(
+		body,
+	)
+}
+
 /** Trims text to a maximum length for <meta> descriptions, on a word boundary. */
 export function truncate(value: string, maxLength: number): string {
 	const normalised = value.replace(/\s+/g, " ").trim()

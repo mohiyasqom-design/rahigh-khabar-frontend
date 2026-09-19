@@ -120,3 +120,15 @@ export function listRecentMedia(pageSize = 12): Promise<Paginated<MediaItem>> {
 		`admin/media${adminQuery({ page: 1, pageSize })}`,
 	)
 }
+
+/* -------------------------------------------------------------------------- */
+/* Stage 10 Part 5 — direct device uploads                                     */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Re-exported so every caller keeps importing upload helpers from one module.
+ * The implementation lives in `lib/media-upload.ts` because it targets the new
+ * `POST /media/upload` (and `POST /users/me/avatar`) routes, while everything
+ * above still targets the Stage 8 `/admin/media` resource.
+ */
+export { uploadAvatar, uploadMediaFromDevice } from "@/lib/media-upload"

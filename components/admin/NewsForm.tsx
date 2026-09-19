@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState, type FormEvent } from "react"
 import CoverImagePicker, {
 	type CoverSelection,
 } from "@/components/admin/CoverImagePicker"
+import RichEditor from "@/components/admin/RichEditor"
 import { errorMessage, isUnauthorized, SESSION_EXPIRED_MESSAGE } from "@/lib/errors"
 import { createNews, updateNews } from "@/lib/news"
 import type { Category } from "@/types/category"
@@ -52,6 +53,64 @@ interface FormValues {
 	categoryIds: string[]
 	seoTitle: string
 	metaDescription: string
+	/**
+	 * Stage 10 Part 5. The raw value of an `<input type="datetime-local">`,
+	 * i.e. `YYYY-MM-DDTHH:mm` in the browser's own time zone, NOT an ISO
+	 * instant. It is converted on the way out by `toIsoWithOffset`.
+	 */
+	scheduledFor: string
+}
+
+/**
+ * `datetime-local` has no time zone, while the backend schema is
+ * `.datetime({ offset: true })` and rejects a bare local string. These two
+ * helpers are the only place the conversion happens.
+ *
+ * The offset is taken from the value itself (`getTimezoneOffset` of that exact
+ * date), not from "now", so a time scheduled across a DST boundary still means
+ * the wall-clock moment the editor typed.
+ */
+function toLocalInput(iso: string | null): string {
+	if (!iso) {
+		return ""
+	}
+
+	const date = new Date(iso)
+
+	if (Number.isNaN(date.getTime())) {
+		return ""
+	}
+
+	const pad = (value: number) => String(value).padStart(2, "0")
+
+	return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(
+		date.getHours(),
+	)}:${pad(date.getMinutes())}`
+}
+
+function toIsoWithOffset(localValue: string): string | null {
+	const trimmed = localValue.trim()
+
+	if (!trimmed) {
+		return null
+	}
+
+	const date = new Date(trimmed)
+
+	if (Number.isNaN(date.getTime())) {
+		return null
+	}
+
+	const pad = (value: number) => String(value).padStart(2, "0")
+	const offsetMinutes = -date.getTimezoneOffset()
+	const sign = offsetMinutes >= 0 ? "+" : "-"
+	const absolute = Math.abs(offsetMinutes)
+
+	return (
+		`${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}` +
+		`T${pad(date.getHours())}:${pad(date.getMinutes())}:00` +
+		`${sign}${pad(Math.floor(absolute / 60))}:${pad(absolute % 60)}`
+	)
 }
 
 function valuesOf(article: AdminNewsItem | null): FormValues {
@@ -64,6 +123,7 @@ function valuesOf(article: AdminNewsItem | null): FormValues {
 		categoryIds: article ? article.categories.map((category) => category.id) : [],
 		seoTitle: article?.seoTitle ?? "",
 		metaDescription: article?.metaDescription ?? "",
+		scheduledFor: toLocalInput(article?.scheduledFor ?? null),
 	}
 }
 
@@ -257,6 +317,15 @@ export default function NewsForm({
 			patch.metaDescription = orNull(values.metaDescription)
 		}
 
+		// Scheduling is a normal field of the write schema, not a status action:
+		// setting it moves a DRAFT/IN_REVIEW/REJECTED article to SCHEDULED, and
+		// sending null on a SCHEDULED article sends it back to DRAFT. Both of
+		// those transitions happen in the backend, so the form only sends the
+		// value and re-renders from the response.
+		if (values.scheduledFor !== initial.scheduledFor) {
+			patch.scheduledFor = toIsoWithOffset(values.scheduledFor)
+		}
+
 		return patch
 	}
 
@@ -305,6 +374,7 @@ export default function NewsForm({
 				coverImageId: cover?.id ?? null,
 				seoTitle: orNull(values.seoTitle),
 				metaDescription: orNull(values.metaDescription),
+				scheduledFor: toIsoWithOffset(values.scheduledFor),
 			}
 
 			const created = await createNews(payload)
@@ -413,18 +483,10 @@ export default function NewsForm({
 					<label htmlFor="body" className={labelClass}>
 						متن خبر <span className="text-accent">*</span>
 					</label>
-					<textarea
-						id="body"
-						rows={16}
-						maxLength={NEWS_FIELD_LIMITS.body}
+					<RichEditor 
 						value={values.body}
-						disabled={readOnly || saving}
-						onChange={(event) => setField("body", event.target.value)}
-						className={`${fieldClass} min-h-64 resize-y font-sans`}
+						onChange={(html) => setField("body", html)}
 					/>
-					<span className="mt-1.5 block text-xs text-muted-dark">
-						متن به‌صورت ساده ذخیره می‌شود؛ هر پاراگراف را با یک خط خالی از پاراگراف بعد جدا کنید. سرور قالب HTML یا مارک‌داون را پردازش نمی‌کند.
-					</span>
 					{errors.body ? <span className={errorClass}>{errors.body}</span> : null}
 				</div>
 			</div>
@@ -436,7 +498,7 @@ export default function NewsForm({
 
 				{categories.length === 0 ? (
 					<p className="text-xs leading-6 text-accent">
-						هیچ دسته‌بندی‌ای در سرور تعریف نشده است. چون هر خبر دست‌کم به یک دسته‌بندی نیاز دارد، تا زمان ساخته شدن دسته‌بندی ذخیره ممکن نیست. ساخت دسته‌بندی در این پنل وجود ندارد و باید از سمت سرور انجام شود.
+						فهرست دسته‌بندی‌ها از سرور خالی برگشت. ده دستهٔ رسمی سایت با migration مرحلهٔ ۱۰ در دیتابیس ساخته می‌شوند، پس این حالت یعنی آن migration روی این محیط اجرا نشده است. چون هر خبر دست‌کم به یک دسته‌بندی نیاز دارد، تا آن زمان ذخیره ممکن نیست. ساخت و ویرایش دسته‌بندی در این پنل وجود ندارد و فقط مدیر ارشد از طریق API انجام می‌دهد.
 					</p>
 				) : (
 					<div className="flex flex-wrap gap-2">
@@ -520,6 +582,47 @@ export default function NewsForm({
 				</div>
 			</div>
 
+			{/* Stage 10 Part 5 — publication scheduling. */}
+			<fieldset className="rounded-md border border-border p-4">
+				<legend className="px-1 text-sm font-semibold text-ink">زمان‌بندی انتشار</legend>
+
+				<div className="grid gap-4 md:grid-cols-2">
+					<div>
+						<label htmlFor="scheduledFor" className="block text-xs font-medium text-muted-dark">
+							تاریخ و ساعت انتشار خودکار
+						</label>
+
+						<input
+							id="scheduledFor"
+							type="datetime-local"
+							dir="ltr"
+							value={values.scheduledFor}
+							disabled={readOnly || saving}
+							onChange={(event) => setField("scheduledFor", event.target.value)}
+							className={`${fieldClass} text-start`}
+						/>
+
+						{values.scheduledFor ? (
+							<button
+								type="button"
+								disabled={readOnly || saving}
+								onClick={() => setField("scheduledFor", "")}
+								className="mt-2 text-xs font-medium text-accent transition-opacity hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-60"
+							>
+								حذف زمان‌بندی
+							</button>
+						) : null}
+					</div>
+
+					<p className="text-xs leading-6 text-muted-dark">
+						با ثبت زمان، خبر پس از ذخیره به وضعیت «زمان‌بندی‌شده» می‌رود و زمان‌بند سرور آن را دقیقاً در همان لحظه منتشر می‌کند؛ ساعت واردشده بر اساس ساعت همین دستگاه است و همراه با اختلاف زمانی به سرور فرستاده می‌شود.
+						{article?.status === "SCHEDULED"
+							? " با حذف زمان‌بندی، خبر دوباره به پیش‌نویس برمی‌گردد."
+							: " برای انتشار فوری به‌جای زمان‌بندی، از دکمه‌های تغییر وضعیت در همین صفحه استفاده کنید."}
+					</p>
+				</div>
+			</fieldset>
+
 			{failure ? (
 				<div
 					role="alert"
@@ -556,7 +659,13 @@ export default function NewsForm({
 					disabled={readOnly || saving}
 					className="rounded-md bg-accent px-5 py-2.5 text-sm font-semibold text-paper transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
 				>
-					{saving ? "در حال ذخیره…" : article ? "ذخیرهٔ تغییرات" : "ذخیره به‌عنوان پیش‌نویس"}
+					{saving
+						? "در حال ذخیره…"
+						: article
+							? "ذخیرهٔ تغییرات"
+							: values.scheduledFor
+								? "ذخیره و زمان‌بندی انتشار"
+								: "ذخیره به‌عنوان پیش‌نویس"}
 				</button>
 
 				{dirty && !readOnly ? (
@@ -567,7 +676,7 @@ export default function NewsForm({
 			<p className="text-xs leading-6 text-muted-dark">
 				{article
 					? "توجه: سرور سازوکاری برای ویرایش هم‌زمان ندارد؛ اگر کاربر دیگری همین خبر را هم‌زمان ذخیره کند، آخرین ذخیره جایگزین قبلی می‌شود."
-					: "خبر تازه همیشه در وضعیت پیش‌نویس ساخته می‌شود؛ این رفتار در سرور تعیین شده و قابل تغییر از این فرم نیست."}
+					: "خبر تازه بدون زمان‌بندی در وضعیت پیش‌نویس ساخته می‌شود و با ثبت زمان انتشار، مستقیم در صف انتشار قرار می‌گیرد."}
 			</p>
 		</form>
 	)

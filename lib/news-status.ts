@@ -25,6 +25,7 @@ export const STATUS_LABELS: Record<NewsStatus, string> = {
 	DRAFT: "پیش‌نویس",
 	IN_REVIEW: "در انتظار بازبینی",
 	PUBLISHED: "منتشرشده",
+	SCHEDULED: "زمان‌بندی‌شده",
 	ARCHIVED: "بایگانی‌شده",
 	REJECTED: "ردشده",
 }
@@ -34,6 +35,7 @@ export const TRANSITION_LABELS: Record<NewsStatus, string> = {
 	DRAFT: "بازگرداندن به پیش‌نویس",
 	IN_REVIEW: "ارسال برای بازبینی",
 	PUBLISHED: "انتشار",
+	SCHEDULED: "قرار دادن در صف انتشار",
 	ARCHIVED: "بایگانی کردن",
 	REJECTED: "رد کردن",
 }
@@ -42,6 +44,7 @@ export const TRANSITION_LABELS: Record<NewsStatus, string> = {
 export const STATUS_ORDER: NewsStatus[] = [
 	"DRAFT",
 	"IN_REVIEW",
+	"SCHEDULED",
 	"PUBLISHED",
 	"ARCHIVED",
 	"REJECTED",
@@ -52,10 +55,13 @@ export const STATUS_ORDER: NewsStatus[] = [
  * A same-state request is not a transition and is rejected with 400.
  */
 export const ALLOWED_TRANSITIONS: Readonly<Record<NewsStatus, readonly NewsStatus[]>> = {
-	DRAFT: ["IN_REVIEW", "PUBLISHED", "REJECTED", "ARCHIVED"],
-	IN_REVIEW: ["PUBLISHED", "REJECTED", "ARCHIVED"],
+	DRAFT: ["IN_REVIEW", "SCHEDULED", "PUBLISHED", "REJECTED", "ARCHIVED"],
+	IN_REVIEW: ["SCHEDULED", "PUBLISHED", "REJECTED", "ARCHIVED"],
 	PUBLISHED: ["ARCHIVED"],
-	REJECTED: ["DRAFT"],
+	// A queued article can be published early, sent back to a draft or
+	// rejected; the scheduler itself moves it to PUBLISHED when its time comes.
+	SCHEDULED: ["PUBLISHED", "DRAFT", "REJECTED", "ARCHIVED"],
+	REJECTED: ["DRAFT", "SCHEDULED"],
 	ARCHIVED: ["PUBLISHED"],
 }
 
@@ -63,6 +69,7 @@ export const ALLOWED_TRANSITIONS: Readonly<Record<NewsStatus, readonly NewsStatu
 const ADMIN_EDITABLE_STATUSES: readonly NewsStatus[] = [
 	"DRAFT",
 	"IN_REVIEW",
+	"SCHEDULED",
 	"REJECTED",
 ]
 

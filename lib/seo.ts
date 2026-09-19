@@ -512,6 +512,42 @@ export function buildNewsArticleJsonLd(
 	}
 }
 
+/** One step of a breadcrumb trail: what it is called, and where it points. */
+export interface BreadcrumbEntry {
+	name: string
+	path: string
+}
+
+/** The first crumb of every trail. It is a link to `/`, never a category. */
+export const HOME_BREADCRUMB_NAME = "خانه"
+
+/**
+ * `BreadcrumbList` JSON-LD — "خانه > سیاست".
+ *
+ * `item` is an ABSOLUTE URL built with `absoluteUrl`, like every other URL in
+ * this module: Google ignores relative values here. `position` is 1-based and
+ * contiguous, which the spec requires, so the trail is numbered from the array
+ * rather than from anything the caller passes in.
+ *
+ * The last crumb keeps its `item` on purpose. Omitting it is allowed, but the
+ * final URL is the canonical of the page being rendered, so stating it costs
+ * nothing and agrees with `<link rel="canonical">`.
+ */
+export function buildBreadcrumbJsonLd(
+	trail: BreadcrumbEntry[],
+): Record<string, unknown> {
+	return {
+		"@context": "https://schema.org",
+		"@type": "BreadcrumbList",
+		itemListElement: trail.map((crumb, index) => ({
+			"@type": "ListItem",
+			position: index + 1,
+			name: crumb.name,
+			item: absoluteUrl(crumb.path),
+		})),
+	}
+}
+
 /**
  * Serialises a value for a `<script type="application/ld+json">` body.
  *

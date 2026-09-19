@@ -18,7 +18,7 @@ import type { ReactNode } from "react"
  *
  * NOTE ON CHROME: the public `Header`/`Footer` live in `app/(site)/layout.tsx`
  * and are deliberately NOT in the root layout, so nothing here inherits them.
- * The panel brings its own `AdminNav`.
+ * The panel brings its own `AdminShell` chrome.
  */
 export const dynamic = "force-dynamic"
 

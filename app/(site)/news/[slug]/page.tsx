@@ -3,9 +3,12 @@ import Image from "next/image"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 
+import CommentsSection from "@/components/CommentsSection"
+import LikeButton from "@/components/LikeButton"
+import NewsBodyRenderer from "@/components/NewsBodyRenderer"
 import NewsCard from "@/components/NewsCard"
 import SectionHeading from "@/components/SectionHeading"
-import { formatJalaliDateTime, toParagraphs } from "@/lib/format"
+import { formatJalaliDateTime, looksLikeHtml, toParagraphs } from "@/lib/format"
 import { getNewsBySlug, getNewsPage, getNewsSeoDates } from "@/lib/news"
 import {
 	buildNewsArticleJsonLd,
@@ -86,7 +89,12 @@ export default async function NewsDetailPage({ params }: NewsPageProps) {
 		notFound()
 	}
 
-	const paragraphs = toParagraphs(news.body)
+	// The editor writes sanitised HTML since Stage 10, but older articles are
+	// plain text. Detecting which one this is avoids both failure modes: raw tags
+	// for HTML sent through the text path, and one unbroken wall of text for
+	// plain content sent through the HTML path.
+	const isRichText = looksLikeHtml(news.body)
+	const paragraphs = isRichText ? [] : toParagraphs(news.body)
 	const publishedLabel = formatJalaliDateTime(news.publishedAt)
 	const publishedAt = news.publishedAt
 	const primaryCategory = news.categories[0]
@@ -157,13 +165,17 @@ export default async function NewsDetailPage({ params }: NewsPageProps) {
 					</figure>
 				) : null}
 
-				<div className="mt-8 flex flex-col gap-5 text-[17px] leading-[2] text-ink">
-					{paragraphs.map((paragraph, index) => (
-						<p key={index} className="whitespace-pre-line">
-							{paragraph}
-						</p>
-					))}
-				</div>
+				{isRichText ? (
+					<NewsBodyRenderer html={news.body} />
+				) : (
+					<div className="mt-8 flex flex-col gap-5 text-[17px] leading-[2] text-ink">
+						{paragraphs.map((paragraph, index) => (
+							<p key={index} className="whitespace-pre-line">
+								{paragraph}
+							</p>
+						))}
+					</div>
+				)}
 
 				{news.categories.length > 0 ? (
 					<div className="mt-10 flex flex-wrap items-center gap-2 border-t border-border pt-6">
@@ -178,7 +190,14 @@ export default async function NewsDetailPage({ params }: NewsPageProps) {
 						))}
 					</div>
 				) : null}
+				{/* initialCount is the server total; the personal `liked` flag is
+				    read in the browser, because this page is cached. */}
+				<div className="mt-10 border-t border-border pt-6">
+					<LikeButton newsId={news.id} initialCount={news.likesCount} />
+				</div>
 			</article>
+
+			<CommentsSection newsId={news.id} initialCount={news.commentsCount} />
 
 			{related.length > 0 && primaryCategory ? (
 				<section className="mx-auto mt-12 w-full max-w-3xl">

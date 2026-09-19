@@ -38,8 +38,8 @@ export default async function Footer() {
 							alt="رحیق خبر"
 							width={1175}
 							height={745}
-							sizes="100px"
-							className="h-11 w-auto object-contain"
+							sizes="120px"
+							className="h-[52px] w-auto object-contain"
 						/>
 						<p className="mt-4 max-w-md text-sm leading-[1.9]">
 							رسانه‌ای مستقل برای پوشش دقیق و به‌روز اخبار سیاسی، ایران و
