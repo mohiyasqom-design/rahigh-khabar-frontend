@@ -9,7 +9,7 @@ import {
 	updateVisitorProfile,
 } from "@/lib/auth"
 import { errorMessage, isUnauthorized } from "@/lib/errors"
-import { ACCEPTED_IMAGE_MIME_TYPES, describeFileProblem } from "@/lib/media"
+import { ACCEPTED_IMAGE_INPUT, describeFileProblem } from "@/lib/media"
 import { uploadAvatar } from "@/lib/media-upload"
 import {
 	DISPLAY_NAME_MAX_LENGTH,
@@ -262,7 +262,7 @@ export default function OnboardingForm() {
 						ref={avatarInputRef}
 						id="avatar"
 						type="file"
-						accept={ACCEPTED_IMAGE_MIME_TYPES.join(",")}
+						accept={ACCEPTED_IMAGE_INPUT}
 						className="hidden"
 						onChange={(event) => void handleAvatarPick(event.target.files?.[0])}
 					/>
@@ -271,7 +271,7 @@ export default function OnboardingForm() {
 						type="button"
 						onClick={() => avatarInputRef.current?.click()}
 						disabled={avatarBusy || saving}
-						className="rounded-md border border-border px-3 py-1.5 text-xs font-medium text-ink transition-colors hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-60"
+						className="rounded-md border border-border px-3 py-1.5 text-xs font-medium text-ink transition-colors hover:border-accent hover:text-accent-strong disabled:cursor-not-allowed disabled:opacity-60"
 					>
 						{avatarBusy ? "در حال بارگذاری…" : "بارگذاری عکس پروفایل"}
 					</button>
@@ -281,7 +281,7 @@ export default function OnboardingForm() {
 					</p>
 
 					{avatarError ? (
-						<p role="alert" className="mt-1 text-xs text-accent">
+						<p role="alert" className="mt-1 text-xs text-accent-strong">
 							{avatarError}
 						</p>
 					) : null}
@@ -320,7 +320,7 @@ export default function OnboardingForm() {
 					<p className="mt-1 text-xs text-muted">در حال بررسی…</p>
 				) : null}
 				{usernameError ? (
-					<p className="mt-1 text-xs text-accent">{usernameError}</p>
+					<p className="mt-1 text-xs text-accent-strong">{usernameError}</p>
 				) : null}
 			</div>
 
@@ -342,7 +342,7 @@ export default function OnboardingForm() {
 			</div>
 
 			{error ? (
-				<div className="rounded-md border border-accent/30 bg-accent/5 px-3 py-2 text-sm text-accent">
+				<div className="rounded-md border border-accent/30 bg-accent/5 px-3 py-2 text-sm text-accent-strong">
 					{error}
 				</div>
 			) : null}
@@ -350,7 +350,7 @@ export default function OnboardingForm() {
 			<button
 				type="submit"
 				disabled={submitDisabled}
-				className="w-full rounded-md bg-accent px-4 py-2.5 text-sm font-semibold text-paper transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+				className="w-full rounded-md bg-accent px-4 py-2.5 text-sm font-semibold text-on-accent transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
 			>
 				{saving ? "در حال ثبت…" : "ادامه"}
 			</button>

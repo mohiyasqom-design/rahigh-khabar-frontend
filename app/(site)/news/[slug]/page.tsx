@@ -8,13 +8,17 @@ import LikeButton from "@/components/LikeButton"
 import NewsBodyRenderer from "@/components/NewsBodyRenderer"
 import NewsCard from "@/components/NewsCard"
 import SectionHeading from "@/components/SectionHeading"
+import ShareButtons from "@/components/ShareButtons"
+import ViewTracker from "@/components/ViewTracker"
 import { formatJalaliDateTime, looksLikeHtml, toParagraphs } from "@/lib/format"
 import { getNewsBySlug, getNewsPage, getNewsSeoDates } from "@/lib/news"
 import {
+	absoluteUrl,
 	buildNewsArticleJsonLd,
 	buildNewsMetadata,
 	buildNotFoundMetadata,
 	jsonLdScriptContent,
+	newsPath,
 } from "@/lib/seo"
 
 /**
@@ -121,10 +125,17 @@ export default async function NewsDetailPage({ params }: NewsPageProps) {
 				dangerouslySetInnerHTML={{ __html: jsonLd }}
 			/>
 
+			{/* GROUP 3 — VIEW COUNT FIX. ViewTracker existed since Stage 10 Part 4
+			    but was never mounted anywhere, so no page view was ever sent and
+			    every analytics number built on views stayed at zero. It renders
+			    nothing; it records one view on mount (the backend de-duplicates
+			    per reader per article) and the reading session on leave. */}
+			<ViewTracker newsId={news.id} />
+
 			<article className="mx-auto w-full max-w-3xl">
 				{primaryCategory ? (
 					<nav aria-label="مسیر" className="mb-4 text-xs text-muted">
-						<Link href="/" className="hover:text-accent">
+						<Link href="/" className="hover:text-accent-strong">
 							صفحه اصلی
 						</Link>
 						<span className="px-2" aria-hidden="true">
@@ -132,7 +143,7 @@ export default async function NewsDetailPage({ params }: NewsPageProps) {
 						</span>
 						<Link
 							href={`/category/${primaryCategory.slug}`}
-							className="hover:text-accent"
+							className="hover:text-accent-strong"
 						>
 							{primaryCategory.name}
 						</Link>
@@ -183,7 +194,7 @@ export default async function NewsDetailPage({ params }: NewsPageProps) {
 							<Link
 								key={category.slug}
 								href={`/category/${category.slug}`}
-								className="rounded-sm border border-border px-3 py-1.5 text-xs font-medium text-muted-dark transition-colors hover:border-accent hover:text-accent"
+								className="rounded-sm border border-border px-3 py-1.5 text-xs font-medium text-muted-dark transition-colors hover:border-accent hover:text-accent-strong"
 							>
 								{category.name}
 							</Link>
@@ -192,8 +203,16 @@ export default async function NewsDetailPage({ params }: NewsPageProps) {
 				) : null}
 				{/* initialCount is the server total; the personal `liked` flag is
 				    read in the browser, because this page is cached. */}
-				<div className="mt-10 border-t border-border pt-6">
+				<div className="mt-10 flex flex-col gap-4 border-t border-border pt-6">
 					<LikeButton newsId={news.id} initialCount={news.likesCount} />
+					{/* GROUP 3 — the share buttons (Stage 10 Part 4) were also never
+					    mounted, so the "shares" 10% of the performance score was
+					    always zero. They record a ShareEvent per click. */}
+					<ShareButtons
+						newsId={news.id}
+						url={absoluteUrl(newsPath(news.slug))}
+						title={news.title}
+					/>
 				</div>
 			</article>
 

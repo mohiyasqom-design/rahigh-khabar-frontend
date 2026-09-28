@@ -104,7 +104,7 @@ export default function FollowingView() {
 					loginUrl ? (
 						<a
 							href={loginUrl}
-							className="inline-block rounded-md bg-accent px-5 py-2.5 text-sm font-semibold text-paper transition-opacity hover:opacity-90"
+							className="inline-block rounded-md bg-accent px-5 py-2.5 text-sm font-semibold text-on-accent transition-opacity hover:opacity-90"
 						>
 							ورود با گوگل
 						</a>
@@ -127,7 +127,7 @@ export default function FollowingView() {
 			{error ? (
 				<p
 					role="alert"
-					className="mt-5 rounded-md border border-accent/30 bg-accent/5 px-3 py-2.5 text-sm leading-7 text-accent"
+					className="mt-5 rounded-md border border-accent/30 bg-accent/5 px-3 py-2.5 text-sm leading-7 text-accent-strong"
 				>
 					{error}
 				</p>
@@ -151,7 +151,7 @@ export default function FollowingView() {
 							>
 								<Link
 									href={`/category/${category.slug}`}
-									className="font-medium text-ink transition-colors hover:text-accent"
+									className="font-medium text-ink transition-colors hover:text-accent-strong"
 								>
 									{category.name}
 								</Link>
@@ -160,7 +160,7 @@ export default function FollowingView() {
 									type="button"
 									onClick={() => void unfollow(category)}
 									disabled={busyCategory === category.id}
-									className="text-accent transition-opacity hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-60"
+									className="text-accent-strong transition-opacity hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-60"
 									aria-label={`لغو دنبال‌کردن ${category.name}`}
 								>
 									{busyCategory === category.id ? "…" : "لغو"}
@@ -209,7 +209,7 @@ export default function FollowingView() {
 										<h3 className="font-headline text-lg font-bold leading-8 text-ink">
 											<Link
 												href={`/news/${item.slug}`}
-												className="transition-colors hover:text-accent"
+												className="transition-colors hover:text-accent-strong"
 											>
 												{item.title}
 											</Link>
@@ -224,7 +224,7 @@ export default function FollowingView() {
 												<Link
 													key={category.id}
 													href={`/category/${category.slug}`}
-													className="transition-colors hover:text-accent"
+													className="transition-colors hover:text-accent-strong"
 												>
 													{category.name}
 												</Link>
@@ -247,7 +247,7 @@ export default function FollowingView() {
 							type="button"
 							disabled={loading || pagination.page <= 1}
 							onClick={() => setPage((current) => Math.max(1, current - 1))}
-							className="rounded-md border border-border px-4 py-2 text-sm text-ink transition-colors hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-50"
+							className="rounded-md border border-border px-4 py-2 text-sm text-ink transition-colors hover:border-accent hover:text-accent-strong disabled:cursor-not-allowed disabled:opacity-50"
 						>
 							صفحهٔ قبل
 						</button>
@@ -260,7 +260,7 @@ export default function FollowingView() {
 							type="button"
 							disabled={loading || pagination.page >= pagination.totalPages}
 							onClick={() => setPage((current) => current + 1)}
-							className="rounded-md border border-border px-4 py-2 text-sm text-ink transition-colors hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-50"
+							className="rounded-md border border-border px-4 py-2 text-sm text-ink transition-colors hover:border-accent hover:text-accent-strong disabled:cursor-not-allowed disabled:opacity-50"
 						>
 							صفحهٔ بعد
 						</button>

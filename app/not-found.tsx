@@ -19,14 +19,14 @@ export default function NotFound() {
 			<Header />
 			<main className="mx-auto w-full max-w-shell flex-1 px-4 py-8 sm:py-10">
 				<div className="mx-auto max-w-md rounded-md border border-border px-6 py-14 text-center">
-					<p className="text-3xl font-extrabold tracking-headline text-accent">۴۰۴</p>
+					<p className="text-3xl font-extrabold tracking-headline text-accent-strong">۴۰۴</p>
 					<p className="mt-3 text-lg font-bold text-ink">صفحه پیدا نشد</p>
 					<p className="mt-3 text-sm leading-7 text-muted-dark">
 						نشانی‌ای که دنبال آن بودید وجود ندارد یا حذف شده است.
 					</p>
 					<Link
 						href="/"
-						className="mt-6 inline-block rounded-md bg-accent px-5 py-2.5 text-sm font-semibold text-paper transition-opacity hover:opacity-90"
+						className="mt-6 inline-block rounded-md bg-accent px-5 py-2.5 text-sm font-semibold text-on-accent transition-opacity hover:opacity-90"
 					>
 						بازگشت به صفحه اصلی
 					</Link>

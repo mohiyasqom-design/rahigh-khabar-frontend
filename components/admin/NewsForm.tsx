@@ -12,7 +12,10 @@ import type { Category } from "@/types/category"
 import {
 	NEWS_FIELD_LIMITS,
 	NEWS_SLUG_PATTERN,
+	NEWS_TAG_LABELS,
+	NEWS_TAGS,
 	type AdminNewsItem,
+	type NewsTag,
 	type NewsUpdateInput,
 	type NewsWriteInput,
 } from "@/types/news"
@@ -59,6 +62,19 @@ interface FormValues {
 	 * instant. It is converted on the way out by `toIsoWithOffset`.
 	 */
 	scheduledFor: string
+	/** Group 1 — editorial tags, multi-select, optional. Kept in NEWS_TAGS order. */
+	tags: NewsTag[]
+}
+
+/** Group 1 — normalises a tag list to the canonical order, for comparison. */
+function orderedTags(tags: readonly NewsTag[]): NewsTag[] {
+	return NEWS_TAGS.filter((tag) => tags.includes(tag))
+}
+
+const TAG_HINTS: Record<NewsTag, string> = {
+	featured: "در اسلایدر بالای صفحهٔ نخست نمایش داده می‌شود.",
+	trending: "در ستون «پربازدیدترین‌ها»ی صفحهٔ نخست قرار می‌گیرد.",
+	latest: "به‌طور پیش‌فرض خبرها بر اساس تاریخ انتشار «تازه» هستند؛ این گزینه آن را دستی علامت می‌زند.",
 }
 
 /**
@@ -124,6 +140,7 @@ function valuesOf(article: AdminNewsItem | null): FormValues {
 		seoTitle: article?.seoTitle ?? "",
 		metaDescription: article?.metaDescription ?? "",
 		scheduledFor: toLocalInput(article?.scheduledFor ?? null),
+		tags: orderedTags(article?.tags ?? []),
 	}
 }
 
@@ -212,6 +229,16 @@ export default function NewsForm({
 			categoryIds: current.categoryIds.includes(id)
 				? current.categoryIds.filter((value) => value !== id)
 				: [...current.categoryIds, id],
+		}))
+		setNotice(null)
+	}
+
+	function toggleTag(tag: NewsTag) {
+		setValues((current) => ({
+			...current,
+			tags: current.tags.includes(tag)
+				? current.tags.filter((value) => value !== tag)
+				: orderedTags([...current.tags, tag]),
 		}))
 		setNotice(null)
 	}
@@ -326,6 +353,11 @@ export default function NewsForm({
 			patch.scheduledFor = toIsoWithOffset(values.scheduledFor)
 		}
 
+		// Group 1: the list replaces the stored tags, so send it whole.
+		if (orderedTags(values.tags).join(",") !== orderedTags(initial.tags).join(",")) {
+			patch.tags = orderedTags(values.tags)
+		}
+
 		return patch
 	}
 
@@ -375,6 +407,7 @@ export default function NewsForm({
 				seoTitle: orNull(values.seoTitle),
 				metaDescription: orNull(values.metaDescription),
 				scheduledFor: toIsoWithOffset(values.scheduledFor),
+				tags: orderedTags(values.tags),
 			}
 
 			const created = await createNews(payload)
@@ -531,6 +564,51 @@ export default function NewsForm({
 				{errors.categoryIds ? (
 					<span className={errorClass}>{errors.categoryIds}</span>
 				) : null}
+			</fieldset>
+
+			{/* Group 1 — editorial tags (multi-select, optional). */}
+			<fieldset className="rounded-md border border-border p-4">
+				<legend className="px-1 text-sm font-semibold text-ink">تگ خبر (اختیاری)</legend>
+
+				<p className="mb-3 text-xs leading-6 text-muted-dark">
+					یک خبر می‌تواند هم‌زمان چند تگ داشته باشد؛ بدون تگ هم ذخیره می‌شود و در آن صورت یک خبر عادی (بر اساس تاریخ) است.
+				</p>
+
+				<div className="flex flex-wrap gap-2" role="group" aria-label="تگ خبر">
+					{NEWS_TAGS.map((tag) => {
+						const selected = values.tags.includes(tag)
+
+						return (
+							<label
+								key={tag}
+								title={TAG_HINTS[tag]}
+								className={`cursor-pointer rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
+									selected
+										? "border-accent bg-accent/10 text-accent"
+										: "border-border text-ink hover:border-border-strong"
+								} ${readOnly || saving ? "cursor-not-allowed opacity-60" : ""}`}
+							>
+								<input
+									type="checkbox"
+									className="sr-only"
+									checked={selected}
+									disabled={readOnly || saving}
+									onChange={() => toggleTag(tag)}
+								/>
+								{selected ? "✓ " : ""}
+								{NEWS_TAG_LABELS[tag]}
+							</label>
+						)
+					})}
+				</div>
+
+				<ul className="mt-3 space-y-1 text-xs leading-6 text-muted-dark">
+					{NEWS_TAGS.map((tag) => (
+						<li key={tag}>
+							<span className="font-semibold text-ink">{NEWS_TAG_LABELS[tag]}:</span> {TAG_HINTS[tag]}
+						</li>
+					))}
+				</ul>
 			</fieldset>
 
 			<CoverImagePicker

@@ -4,6 +4,7 @@ import Link from "next/link"
 import { useCallback, useEffect, useState } from "react"
 
 import AdminPagination from "@/components/admin/AdminPagination"
+import DeleteNewsButton from "@/components/admin/DeleteNewsButton"
 import StatusBadge from "@/components/admin/StatusBadge"
 import { useSession } from "@/components/admin/session"
 import EmptyState from "@/components/EmptyState"
@@ -234,6 +235,9 @@ export default function NewsListView({ fixedStatus, title, description }: Props)
 									<th scope="col" className="px-4 py-3 text-start font-semibold">دسته‌بندی</th>
 									<th scope="col" className="px-4 py-3 text-start font-semibold">نویسنده</th>
 									<th scope="col" className="px-4 py-3 text-start font-semibold">زمان</th>
+									<th scope="col" className="px-4 py-3 text-start font-semibold">
+										<span className="sr-only">عملیات</span>
+									</th>
 								</tr>
 							</thead>
 
@@ -270,6 +274,15 @@ export default function NewsListView({ fixedStatus, title, description }: Props)
 												? `انتشار: ${formatJalaliDateTime(item.scheduledFor)}`
 												: formatJalaliDateTime(item.updatedAt)}
 										</td>
+
+										<td className="px-4 py-3">
+											{/* Group 1: delete with confirmation (hidden when not allowed). */}
+											<DeleteNewsButton
+												article={item}
+												variant="link"
+												onDeleted={() => void load()}
+											/>
+										</td>
 									</tr>
 								))}
 							</tbody>
@@ -299,6 +312,14 @@ export default function NewsListView({ fixedStatus, title, description }: Props)
 										? `انتشار: ${formatJalaliDateTime(item.scheduledFor)}`
 										: formatJalaliDateTime(item.updatedAt)}
 								</p>
+
+								<div className="mt-3">
+									<DeleteNewsButton
+										article={item}
+										variant="link"
+										onDeleted={() => void load()}
+									/>
+								</div>
 							</li>
 						))}
 					</ul>

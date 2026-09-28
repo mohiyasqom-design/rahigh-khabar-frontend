@@ -86,7 +86,7 @@ export default function CommentForm({
 					<button
 						type="submit"
 						disabled={pending || content.trim().length === 0}
-						className="rounded-md bg-accent px-4 py-1.5 text-sm font-medium text-paper transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+						className="rounded-md bg-accent px-4 py-1.5 text-sm font-medium text-on-accent transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
 					>
 						{pending ? "در حال ارسال…" : "ارسال"}
 					</button>
@@ -104,7 +104,7 @@ export default function CommentForm({
 				</p>
 			) : null}
 
-			{error ? <p className="text-xs text-accent">{error}</p> : null}
+			{error ? <p className="text-xs text-accent-strong">{error}</p> : null}
 		</form>
 	)
 }

@@ -36,5 +36,8 @@ export const metadata: Metadata = {
 }
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
-	return <div className="flex flex-1 flex-col bg-paper">{children}</div>
+	// Group 1: `theme-admin` pins the ORIGINAL palette (maroon/black) for the
+	// whole panel; the public rebrand to gold/navy must not reach it. `text-ink`
+	// is re-applied so inherited text colour resolves against these variables.
+	return <div className="theme-admin flex flex-1 flex-col bg-paper text-ink">{children}</div>
 }

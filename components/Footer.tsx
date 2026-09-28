@@ -34,7 +34,7 @@ export default async function Footer() {
 				<div className="grid grid-cols-1 gap-8 sm:grid-cols-3">
 					<div className="sm:col-span-2">
 						<Image
-							src="/logo-rahigh-khabar.png"
+							src="/logo-rahigh-khabar-gold.png"
 							alt="رحیق خبر"
 							width={1175}
 							height={745}

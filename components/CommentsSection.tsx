@@ -82,7 +82,7 @@ export default function CommentsSection({
 			<CommentForm newsId={newsId} onCommentAdded={handleCommentAdded} />
 
 			{error ? (
-				<p className="mt-6 text-sm text-accent">{error}</p>
+				<p className="mt-6 text-sm text-accent-strong">{error}</p>
 			) : (
 				<CommentList comments={comments} className="mt-6" />
 			)}

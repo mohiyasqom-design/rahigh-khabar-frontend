@@ -16,8 +16,16 @@
 import { useEffect, useRef } from 'react';
 import { trackReadingSession, trackView } from '@/lib/analytics';
 
-/** Survives StrictMode double-mounts and client-side re-renders. */
-const sentViews = new Set<string>();
+/**
+ * Survives StrictMode double-mounts and client-side re-renders.
+ *
+ * Group 3: a timestamp per key instead of a forever-Set, so coming back to the
+ * same article later in the same tab counts again once the window has passed.
+ * The window matches the backend's `viewDedupeWindowMs`, which remains the
+ * real guard; this only saves a pointless request.
+ */
+const VIEW_RESEND_AFTER_MS = 10 * 60_000;
+const sentViews = new Map<string, number>();
 
 export default function ViewTracker({ newsId }: { newsId?: string }) {
   const startedAt = useRef<number>(Date.now());
@@ -28,8 +36,9 @@ export default function ViewTracker({ newsId }: { newsId?: string }) {
     const path = window.location.pathname;
     const key = `${newsId ?? 'home'}:${path}`;
 
-    if (!sentViews.has(key)) {
-      sentViews.add(key);
+    const lastSent = sentViews.get(key);
+    if (lastSent === undefined || Date.now() - lastSent >= VIEW_RESEND_AFTER_MS) {
+      sentViews.set(key, Date.now());
       trackView({
         ...(newsId === undefined ? {} : { newsId }),
         path,

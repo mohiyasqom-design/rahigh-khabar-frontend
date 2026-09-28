@@ -93,7 +93,7 @@ export default function AuthMenu() {
 			{session.username === null ? (
 				<Link
 					href="/onboarding"
-					className="rounded-full bg-accent px-3 py-1.5 text-xs font-semibold text-paper transition-opacity hover:opacity-90"
+					className="rounded-full bg-accent px-3 py-1.5 text-xs font-semibold text-on-accent transition-opacity hover:opacity-90"
 				>
 					تکمیل پروفایل
 				</Link>

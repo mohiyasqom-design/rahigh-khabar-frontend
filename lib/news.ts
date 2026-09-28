@@ -29,6 +29,7 @@ import type {
 	NewsDetail,
 	NewsListItem,
 	NewsStatus,
+	NewsTag,
 	NewsUpdateInput,
 	NewsWriteInput,
 } from "@/types/news"
@@ -44,6 +45,8 @@ export interface NewsQuery {
 	page?: number
 	pageSize?: number
 	categorySlug?: string
+	/** Group 1: `GET /news?tag=featured|trending|latest`. */
+	tag?: NewsTag
 }
 
 function clamp(value: number, min: number, max: number): number {
@@ -73,6 +76,10 @@ export async function getNewsPage(
 	// and `categorySlug=` (empty) would be rejected.
 	if (query.categorySlug) {
 		search.set("categorySlug", query.categorySlug)
+	}
+
+	if (query.tag) {
+		search.set("tag", query.tag)
 	}
 
 	return apiFetch<Paginated<NewsListItem>>(`news?${search.toString()}`, publicCache)
@@ -235,6 +242,17 @@ export function updateNews(
 		"PATCH",
 		input,
 	)
+}
+
+/**
+ * Group 1 — permanently deletes an article AND the media files it owns (its
+ * cover and the images uploaded into its body, unless another article still
+ * uses them). Answers 204; a repeated call for an already-deleted id is also a
+ * 204. SUPER_ADMIN may delete anything; an ADMIN only their own unpublished
+ * articles (enforced by the backend; the UI hides the button accordingly).
+ */
+export async function deleteNews(id: string): Promise<void> {
+	await adminJson<unknown>(`admin/news/${encodeURIComponent(id)}`, "DELETE")
 }
 
 /** Moves an article through the workflow. SUPER_ADMIN only, backend-enforced. */

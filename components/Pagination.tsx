@@ -37,7 +37,7 @@ export default function Pagination({
 				<Link
 					href={hrefForPage(page - 1)}
 					rel="prev"
-					className={`${baseClass} border border-border font-medium text-ink hover:border-border-strong hover:text-accent`}
+					className={`${baseClass} border border-border font-medium text-ink hover:border-border-strong hover:text-accent-strong`}
 				>
 					قبلی
 				</Link>
@@ -62,14 +62,14 @@ export default function Pagination({
 							{entry === page ? (
 								<span
 									aria-current="page"
-									className={`${baseClass} bg-accent font-bold text-paper`}
+									className={`${baseClass} bg-accent font-bold text-on-accent`}
 								>
 									{formatPersianNumber(entry)}
 								</span>
 							) : (
 								<Link
 									href={hrefForPage(entry)}
-									className={`${baseClass} border border-border text-ink hover:border-border-strong hover:text-accent`}
+									className={`${baseClass} border border-border text-ink hover:border-border-strong hover:text-accent-strong`}
 								>
 									{formatPersianNumber(entry)}
 								</Link>
@@ -83,7 +83,7 @@ export default function Pagination({
 				<Link
 					href={hrefForPage(page + 1)}
 					rel="next"
-					className={`${baseClass} border border-border font-medium text-ink hover:border-border-strong hover:text-accent`}
+					className={`${baseClass} border border-border font-medium text-ink hover:border-border-strong hover:text-accent-strong`}
 				>
 					بعدی
 				</Link>

@@ -15,6 +15,21 @@ import type { NewsCoverImage } from "./media"
  *    schema (or in the Prisma model), so nothing in the UI may claim a news
  *    source, a "most read" ranking or an editorial pick.
  */
+/**
+ * Group 1 — editorial tags (multi-select; an article can carry several).
+ *   featured -> homepage slider      trending -> "most read" sidebar
+ *   latest   -> manual override of the date-ordered latest feed
+ * Mirrors `NEWS_TAGS` in the backend's news.schema.ts.
+ */
+export const NEWS_TAGS = ["featured", "trending", "latest"] as const
+export type NewsTag = (typeof NEWS_TAGS)[number]
+
+export const NEWS_TAG_LABELS: Record<NewsTag, string> = {
+	featured: "اصلی",
+	trending: "پربازدید",
+	latest: "تازه",
+}
+
 export interface NewsListItem {
 	title: string
 	slug: string
@@ -27,6 +42,8 @@ export interface NewsListItem {
 	author: { displayName: string }
 	coverImage: NewsCoverImage | null
 	categories: Category[]
+	/** Group 1. Always present (possibly empty) in every news response. */
+	tags: NewsTag[]
 }
 
 /**
@@ -114,6 +131,8 @@ export interface AdminNewsItem {
 	coverImageId: string | null
 	coverImage: NewsCoverImage | null
 	categories: Category[]
+	/** Group 1: editorial tags. */
+	tags: NewsTag[]
 	seoTitle: string | null
 	metaDescription: string | null
 	/**
@@ -168,6 +187,11 @@ export interface NewsWriteInput {
 	 * queue and returns a SCHEDULED article to DRAFT.
 	 */
 	scheduledFor?: string | null
+	/**
+	 * Group 1 — editorial tags, multi-select, optional. Omit (or send []) for an
+	 * untagged article; on PATCH the list REPLACES the stored tags.
+	 */
+	tags?: NewsTag[]
 }
 
 /**

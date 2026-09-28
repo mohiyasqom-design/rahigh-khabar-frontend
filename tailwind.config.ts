@@ -3,6 +3,19 @@ import type { Config } from "tailwindcss"
 /**
  * Rahigh Khabar (رحیق خبر) — design system tokens.
  *
+ * GROUP 1 — BRAND REFRESH (gold / navy) FOR THE PUBLIC SITE ONLY.
+ *   `ink`, `accent`, `accent-strong` and `on-accent` are no longer hex values
+ *   but CSS custom properties (RGB channels, see app/globals.css), written as
+ *   `rgb(var(--color-x) / <alpha-value>)` so every opacity variant
+ *   (bg-accent/10, border-accent/30, hover states...) follows the palette too.
+ *     :root          -> public palette: ink #0B1F3A (navy), accent #C9A227 (gold)
+ *     .theme-admin   -> the ORIGINAL palette, restored for the admin panel,
+ *                       which must not change (set in app/admin/layout.tsx).
+ *   CONTRAST (WCAG AA): gold on paper is only ~2.3:1, so gold is never used as
+ *   a text colour on light surfaces. `accent-strong` (#8A6A0B, ~4.9:1 on
+ *   paper) is the text/hover colour, and `on-accent` (navy, ~6.8:1 on gold)
+ *   is the text colour on gold fills. White on navy is ~16:1.
+ *
  * COLOR TOKENS (approved palette, taken from the signed-off mockup).
  * Always use these token names instead of raw hex values:
  *
@@ -54,14 +67,18 @@ const config: Config = {
 		extend: {
 			colors: {
 				ink: {
-					DEFAULT: "#14181F",
+					DEFAULT: "rgb(var(--color-ink) / <alpha-value>)",
 					soft: "#5A6472",
 				},
 				paper: {
 					DEFAULT: "#FAFAF8",
 				},
 				accent: {
-					DEFAULT: "#8B1A2B",
+					DEFAULT: "rgb(var(--color-accent) / <alpha-value>)",
+					strong: "rgb(var(--color-accent-strong) / <alpha-value>)",
+				},
+				"on-accent": {
+					DEFAULT: "rgb(var(--color-on-accent) / <alpha-value>)",
 				},
 				link: {
 					DEFAULT: "#3D5A73",
@@ -84,6 +101,10 @@ const config: Config = {
 					"sans-serif",
 				],
 				quran: ["var(--font-amiri-quran)", "Amiri", "serif"],
+				// Group 1: available to the news-body editor only (applied inline
+				// on selected text); NOT the site default, which stays Vazirmatn.
+				shabnam: ["var(--font-shabnam)"],
+				peyda: ["var(--font-peyda)"],
 			},
 			letterSpacing: {
 				headline: "-0.01em",

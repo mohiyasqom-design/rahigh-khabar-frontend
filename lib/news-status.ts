@@ -113,3 +113,23 @@ export function editingBlockedReason(
 
 	return `خبر در وضعیت «${STATUS_LABELS[news.status]}» است و در این وضعیت فقط مدیر ارشد می‌تواند آن را ویرایش کند.`
 }
+
+/**
+ * Group 1 — whether the "delete article" action should be offered.
+ *
+ * Mirrors the backend's `newsPolicy.assert(actor, news, 'delete')`: a
+ * SUPER_ADMIN may delete any article; an ADMIN only their OWN article while it
+ * is still unpublished (exactly the statuses they may edit). The backend
+ * re-checks on the stored record, so hiding the button is convenience, not
+ * security.
+ */
+export function canDeleteNews(
+	user: AdminUser,
+	news: Pick<AdminNewsItem, "authorId" | "status">,
+): boolean {
+	if (user.role === "SUPER_ADMIN") {
+		return true
+	}
+
+	return news.authorId === user.id && ADMIN_EDITABLE_STATUSES.includes(news.status)
+}

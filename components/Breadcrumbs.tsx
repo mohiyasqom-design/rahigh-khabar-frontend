@@ -52,7 +52,7 @@ export default function Breadcrumbs({ trail }: { trail: BreadcrumbEntry[] }) {
 								) : (
 									<Link
 										href={crumb.path}
-										className="transition-colors hover:text-accent"
+										className="transition-colors hover:text-accent-strong"
 									>
 										{crumb.name}
 									</Link>

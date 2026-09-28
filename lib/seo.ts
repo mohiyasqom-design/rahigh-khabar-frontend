@@ -182,7 +182,8 @@ const DEFAULT_SHARE_IMAGE_HEIGHT = 630
 const DEFAULT_SHARE_IMAGE_ALT = SITE_NAME
 
 /** The real logo, used for `publisher.logo` in JSON-LD. */
-const PUBLISHER_LOGO_PATH = "/logo-rahigh-khabar.png"
+// Group 1: the gold brand mark (transparent PNG, same 1175×745 canvas).
+const PUBLISHER_LOGO_PATH = "/logo-rahigh-khabar-gold.png"
 const PUBLISHER_LOGO_WIDTH = 1175
 const PUBLISHER_LOGO_HEIGHT = 745
 

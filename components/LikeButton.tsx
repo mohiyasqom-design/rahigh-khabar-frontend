@@ -83,7 +83,7 @@ export default function LikeButton({
 				aria-pressed={liked}
 				className={`flex w-fit items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors ${
 					liked
-						? "bg-accent/10 text-accent hover:bg-accent/20"
+						? "bg-accent/10 text-accent-strong hover:bg-accent/20"
 						: "bg-border/50 text-ink hover:bg-border"
 				} disabled:cursor-not-allowed disabled:opacity-60`}
 			>
@@ -105,7 +105,7 @@ export default function LikeButton({
 				</p>
 			) : null}
 
-			{error ? <p className="text-xs text-accent">{error}</p> : null}
+			{error ? <p className="text-xs text-accent-strong">{error}</p> : null}
 		</div>
 	)
 }

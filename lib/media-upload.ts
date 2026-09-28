@@ -44,6 +44,20 @@ export function uploadMediaFromDevice(file: File, altText = ""): Promise<MediaIt
 }
 
 /**
+ * Group 1 — `POST /media/editor-upload`: an image picked from the device from
+ * INSIDE the news body editor. Same server-side pipeline as the cover upload
+ * (magic-byte check, re-encode, UUID name, atomic write), but its own route so
+ * the cover endpoint stays untouched. The returned `url` is inserted at the
+ * editor cursor; the backend links the file to the article when it is saved.
+ */
+export function uploadEditorImage(file: File, altText = ""): Promise<MediaItem> {
+	return adminFetch<MediaItem>("media/editor-upload", {
+		method: "POST",
+		body: uploadForm(file, altText),
+	})
+}
+
+/**
  * `POST /users/me/avatar` — a SITE VISITOR replacing their picture.
  *
  * Goes through `apiFetch`, not `adminFetch`: this route is guarded by the

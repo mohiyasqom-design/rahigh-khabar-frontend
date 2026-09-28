@@ -31,7 +31,7 @@ export function RankedNewsRow({
 			>
 				{formatPersianNumber(rank)}
 			</span>
-			<h3 className="line-clamp-2 text-sm font-semibold leading-[1.5] transition-colors group-hover:text-accent">
+			<h3 className="line-clamp-2 text-sm font-semibold leading-[1.5] transition-colors group-hover:text-accent-strong">
 				{news.title}
 			</h3>
 		</Link>
@@ -45,7 +45,7 @@ export function CompactNewsRow({ news }: { news: NewsListItem }) {
 			href={`/news/${news.slug}`}
 			className="group flex items-center justify-between gap-4 border-t border-border py-3 last:border-b"
 		>
-			<h3 className="text-[15px] font-medium leading-[1.6] transition-colors group-hover:text-accent">
+			<h3 className="text-[15px] font-medium leading-[1.6] transition-colors group-hover:text-accent-strong">
 				{news.title}
 			</h3>
 			{news.publishedAt ? (

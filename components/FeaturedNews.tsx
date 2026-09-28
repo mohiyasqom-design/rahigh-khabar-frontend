@@ -41,7 +41,7 @@ export default function FeaturedNews({ news }: { news: NewsListItem }) {
 
 			<div className="absolute inset-x-0 bottom-0 p-4 sm:p-6">
 				{category ? (
-					<span className="inline-block rounded-sm bg-accent px-2.5 py-1 text-[11px] font-bold text-paper">
+					<span className="inline-block rounded-sm bg-accent px-2.5 py-1 text-[11px] font-bold text-on-accent">
 						{category.name}
 					</span>
 				) : null}

@@ -190,13 +190,13 @@ export default function PushBanner() {
 					type="button"
 					onClick={unsubscribe}
 					disabled={busy}
-					className="rounded-md border border-border px-3 py-1.5 text-xs font-medium text-ink transition-colors hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-60"
+					className="rounded-md border border-border px-3 py-1.5 text-xs font-medium text-ink transition-colors hover:border-accent hover:text-accent-strong disabled:cursor-not-allowed disabled:opacity-60"
 				>
 					{busy ? "در حال لغو…" : "لغو اعلان"}
 				</button>
 
 				{error ? (
-					<p role="alert" className="w-full text-xs text-accent">
+					<p role="alert" className="w-full text-xs text-accent-strong">
 						{error}
 					</p>
 				) : null}
@@ -213,7 +213,7 @@ export default function PushBanner() {
 					type="button"
 					onClick={subscribe}
 					disabled={busy}
-					className="rounded-md bg-accent px-4 py-1.5 text-xs font-semibold text-paper transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+					className="rounded-md bg-accent px-4 py-1.5 text-xs font-semibold text-on-accent transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
 				>
 					{busy ? "در حال فعال‌سازی…" : "فعال‌سازی اعلان"}
 				</button>
@@ -231,7 +231,7 @@ export default function PushBanner() {
 			</span>
 
 			{error ? (
-				<p role="alert" className="w-full text-xs text-accent">
+				<p role="alert" className="w-full text-xs text-accent-strong">
 					{error}
 				</p>
 			) : null}

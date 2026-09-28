@@ -65,11 +65,11 @@ export default function NewsCard({
 			</div>
 
 			{category ? (
-				<span className="text-[11px] font-bold text-accent">{category.name}</span>
+				<span className="text-[11px] font-bold text-accent-strong">{category.name}</span>
 			) : null}
 
 			<h3
-				className={`mt-1 line-clamp-2 transition-colors group-hover:text-accent ${
+				className={`mt-1 line-clamp-2 transition-colors group-hover:text-accent-strong ${
 					variant === "rail"
 						? "text-[15px] font-semibold leading-[1.45]"
 						: "text-[17px] font-bold leading-[1.5]"

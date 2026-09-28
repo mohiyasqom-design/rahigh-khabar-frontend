@@ -14,7 +14,7 @@ export default function VerseBanner() {
 		<div className="border-b border-border bg-paper px-4 pb-3 pt-5 text-center">
 			<p
 				lang="ar"
-				className="font-quran text-2xl leading-relaxed text-accent md:text-3xl"
+				className="font-quran text-2xl leading-relaxed text-accent-strong md:text-3xl"
 			>
 				﴿ يُسْقَوْنَ مِنْ رَحِيقٍ مَخْتُومٍ ﴾
 			</p>

@@ -25,8 +25,13 @@ import { SEARCH_DEBOUNCE_MS, SEARCH_MAX_LENGTH, type SearchSuggestion } from "@/
  *
  * SUBMIT GOES TO `/search`, which is the full, paginated, shareable result
  * page; the dropdown is only a shortcut to individual articles.
+ *
+ * GROUP 1 — the field is now rendered at the top of the header MENU panel
+ * instead of a separate search panel. Search behaviour is unchanged; the only
+ * addition is `autoFocus`, so the menu can open without forcing the on-screen
+ * keyboard over the category list on phones.
  */
-export default function HeaderSearch() {
+export default function HeaderSearch({ autoFocus = true }: { autoFocus?: boolean } = {}) {
 	const router = useRouter()
 	const listId = useId()
 	const [term, setTerm] = useState("")
@@ -37,8 +42,10 @@ export default function HeaderSearch() {
 	// The field is only mounted when the panel opens, so focusing on mount is
 	// what the reader expects after clicking the search icon.
 	useEffect(() => {
-		inputRef.current?.focus()
-	}, [])
+		if (autoFocus) {
+			inputRef.current?.focus()
+		}
+	}, [autoFocus])
 
 	useEffect(() => {
 		if (!isSearchable(term)) {
@@ -99,7 +106,7 @@ export default function HeaderSearch() {
 				<button
 					type="submit"
 					disabled={!isSearchable(term)}
-					className="shrink-0 rounded-md bg-accent px-4 py-2 text-sm font-semibold text-paper transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+					className="shrink-0 rounded-md bg-accent px-4 py-2 text-sm font-semibold text-on-accent transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
 				>
 					جست‌وجو
 				</button>

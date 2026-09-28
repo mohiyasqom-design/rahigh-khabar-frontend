@@ -4,6 +4,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useCallback, useEffect, useState } from "react"
 
+import DeleteNewsButton from "@/components/admin/DeleteNewsButton"
 import NewsForm from "@/components/admin/NewsForm"
 import StatusActions from "@/components/admin/StatusActions"
 import { useSession } from "@/components/admin/session"
@@ -130,12 +131,22 @@ export default function NewsEditor({ newsId }: { newsId?: string }) {
 					)}
 				</div>
 
-				<Link
-					href="/admin"
-					className="rounded-md border border-border px-4 py-2 text-sm font-medium text-ink transition-colors hover:border-accent hover:text-accent"
-				>
-					بازگشت به داشبورد
-				</Link>
+				<div className="flex flex-wrap items-center gap-2">
+					{/* Group 1: permanent delete, with confirmation. */}
+					{article ? (
+						<DeleteNewsButton
+							article={article}
+							onDeleted={() => router.replace("/admin/news")}
+						/>
+					) : null}
+
+					<Link
+						href="/admin"
+						className="rounded-md border border-border px-4 py-2 text-sm font-medium text-ink transition-colors hover:border-accent hover:text-accent"
+					>
+						بازگشت به داشبورد
+					</Link>
+				</div>
 			</div>
 
 			{article ? (

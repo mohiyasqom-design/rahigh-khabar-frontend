@@ -4,7 +4,7 @@ import Link from "next/link"
  * Section heading with the mockup's coloured marker bar and optional
  * "مشاهده همه" action.
  *
- * The marker colour is meaningful, not decorative variety: `accent` (maroon)
+ * The marker colour is meaningful, not decorative variety: `accent` (brand gold on the public site, maroon in admin)
  * marks a category section, `link` (blue-grey) marks a secondary list. `none`
  * is for plain section titles.
  */

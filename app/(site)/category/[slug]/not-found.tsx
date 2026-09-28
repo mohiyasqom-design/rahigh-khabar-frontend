@@ -17,7 +17,7 @@ export default function CategoryNotFound() {
 			</p>
 			<Link
 				href="/"
-				className="mt-6 inline-block rounded-md bg-accent px-5 py-2.5 text-sm font-semibold text-paper transition-opacity hover:opacity-90"
+				className="mt-6 inline-block rounded-md bg-accent px-5 py-2.5 text-sm font-semibold text-on-accent transition-opacity hover:opacity-90"
 			>
 				بازگشت به صفحه اصلی
 			</Link>

@@ -137,7 +137,7 @@ export default async function CategoryListing({
 					action={
 						<Link
 							href="/"
-							className="inline-block rounded-md bg-accent px-5 py-2.5 text-sm font-semibold text-paper transition-opacity hover:opacity-90"
+							className="inline-block rounded-md bg-accent px-5 py-2.5 text-sm font-semibold text-on-accent transition-opacity hover:opacity-90"
 						>
 							مشاهده آخرین اخبار
 						</Link>

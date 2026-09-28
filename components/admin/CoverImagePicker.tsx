@@ -5,7 +5,7 @@ import { useRef, useState } from "react"
 
 import { errorMessage, isUnauthorized, SESSION_EXPIRED_MESSAGE } from "@/lib/errors"
 import {
-	ACCEPTED_IMAGE_MIME_TYPES,
+	ACCEPTED_IMAGE_INPUT,
 	describeFileProblem,
 	listRecentMedia,
 	maxUploadSizeBytes,
@@ -201,7 +201,7 @@ export default function CoverImagePicker({
 						id="cover-file"
 						ref={inputRef}
 						type="file"
-						accept={ACCEPTED_IMAGE_MIME_TYPES.join(",")}
+						accept={ACCEPTED_IMAGE_INPUT}
 						disabled={disabled || busy}
 						onChange={(event) => pickFile(event.target.files?.[0] ?? null)}
 						className="mt-2 w-full rounded-md border border-border bg-white px-3 py-2 text-xs text-ink file:me-3 file:rounded-md file:border-0 file:bg-paper file:px-3 file:py-1.5 file:text-xs file:text-ink disabled:opacity-60"

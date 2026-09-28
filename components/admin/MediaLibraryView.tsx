@@ -9,7 +9,7 @@ import { deleteMediaAsset, listMediaLibrary } from "@/lib/admin-resources"
 import { errorCode, errorMessage, isUnauthorized } from "@/lib/errors"
 import { formatJalaliDateTime, formatPersianNumber } from "@/lib/format"
 import {
-	ACCEPTED_IMAGE_MIME_TYPES,
+	ACCEPTED_IMAGE_INPUT,
 	describeFileProblem,
 	maxUploadSizeBytes,
 	megabytes,
@@ -182,7 +182,7 @@ export default function MediaLibraryView() {
 						ref={inputRef}
 						id="media-file"
 						type="file"
-						accept={ACCEPTED_IMAGE_MIME_TYPES.join(",")}
+						accept={ACCEPTED_IMAGE_INPUT}
 						disabled={uploading}
 						onChange={(event) => {
 							const file = event.target.files?.[0]

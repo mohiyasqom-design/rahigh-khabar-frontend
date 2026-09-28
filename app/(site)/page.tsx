@@ -1,10 +1,11 @@
 import type { Metadata } from "next"
 
 import EmptyState from "@/components/EmptyState"
-import FeaturedNews from "@/components/FeaturedNews"
+import FeaturedSlider from "@/components/FeaturedSlider"
 import NewsCard from "@/components/NewsCard"
 import { CompactNewsRow, RankedNewsRow } from "@/components/NewsRows"
 import SectionHeading from "@/components/SectionHeading"
+import ViewTracker from "@/components/ViewTracker"
 import { getCategoriesForNav } from "@/lib/categories"
 import { getNewsPage, type NewsQuery } from "@/lib/news"
 import { buildHomeMetadata } from "@/lib/seo"
@@ -13,8 +14,22 @@ import type { NewsListItem } from "@/types/news"
 /**
  * Homepage.
  *
- * LAYOUT (from the signed-off mockup): hero + side list, then a horizontal
- * rail of recent stories, then one category section.
+ * LAYOUT — GROUP 1: a full-width slider of «اصلی» (featured-tagged) articles,
+ * then the "آخرین اخبار" rail side by side with the sidebar, then one category
+ * section. The slider replaces the single-story hero; the sidebar and the
+ * rail are kept and only re-arranged below it.
+ *
+ * TAGS (Group 1) drive three spots, each with a fallback so the page never
+ * looks broken:
+ *   - slider: `GET /news?tag=featured`. None tagged -> the newest published
+ *     article, shown as a static hero (one slide = no dots, no timer);
+ *   - sidebar: `?tag=trending` titled "پربازدیدترین‌ها". None tagged -> the
+ *     next newest articles, honestly titled "تازه‌ترین خبرها" (there is still
+ *     no view counter; see below);
+ *   - rail: articles tagged «تازه» are pinned first, then the date feed.
+ *
+ * (Original Stage 7 layout: hero + side list, then a horizontal rail of recent
+ * stories, then one category section.)
  *
  * THE ONE HONEST SUBSTITUTION: the mockup's side list is titled
  * "پربازدیدترین‌ها" (most read). The backend has no view counter, no
@@ -51,9 +66,13 @@ export const revalidate = 60
  */
 export const metadata: Metadata = buildHomeMetadata()
 
-const HOME_FEED_SIZE = 10
+const HOME_FEED_SIZE = 16
 const SIDEBAR_COUNT = 5
-const RAIL_COUNT = 4
+const RAIL_COUNT = 6
+/** Group 1: how many «اصلی» (featured) articles the slider shows at most. */
+const SLIDER_COUNT = 5
+/** Group 1: manually «تازه»-tagged articles pinned at the head of the rail. */
+const PINNED_LATEST_COUNT = 3
 const SPOTLIGHT_FETCH_SIZE = 12
 const SPOTLIGHT_CARDS = 2
 const SPOTLIGHT_ROWS = 3
@@ -90,10 +109,16 @@ async function loadFeedItems(query: NewsQuery): Promise<NewsListItem[] | null> {
 }
 
 export default async function HomePage() {
-	const [feedItems, categories] = await Promise.all([
-		loadFeedItems({ page: 1, pageSize: HOME_FEED_SIZE }),
-		getCategoriesForNav(),
-	])
+	// Every read degrades to null instead of throwing (see loadFeedItems), so a
+	// backend outage during `next build` / ISR never fails the page or the build.
+	const [feedItems, featuredItems, trendingItems, pinnedLatestItems, categories] =
+		await Promise.all([
+			loadFeedItems({ page: 1, pageSize: HOME_FEED_SIZE }),
+			loadFeedItems({ page: 1, pageSize: SLIDER_COUNT, tag: "featured" }),
+			loadFeedItems({ page: 1, pageSize: SIDEBAR_COUNT + SLIDER_COUNT, tag: "trending" }),
+			loadFeedItems({ page: 1, pageSize: PINNED_LATEST_COUNT, tag: "latest" }),
+			getCategoriesForNav(),
+		])
 
 	// The feed could not be read at all. Deliberately NOT worded as "nothing has
 	// been published yet": that would be a claim about the archive when it is
@@ -107,9 +132,13 @@ export default async function HomePage() {
 		)
 	}
 
-	const featured = feedItems[0]
+	// Group 1 — slider: featured-tagged articles; with none tagged (or the
+	// tagged read failing) fall back to the newest published article.
+	const featured = featuredItems ?? []
+	const newest = feedItems[0]
+	const slides: NewsListItem[] = featured.length > 0 ? featured : newest ? [newest] : []
 
-	if (!featured) {
+	if (slides.length === 0) {
 		return (
 			<EmptyState
 				title="هنوز خبری منتشر نشده است"
@@ -118,8 +147,26 @@ export default async function HomePage() {
 		)
 	}
 
-	const sidebar = feedItems.slice(1, 1 + SIDEBAR_COUNT)
-	const rail = feedItems.slice(1 + SIDEBAR_COUNT, 1 + SIDEBAR_COUNT + RAIL_COUNT)
+	const shown = new Set(slides.map((item) => item.slug))
+	const notShown = (item: NewsListItem) => !shown.has(item.slug)
+
+	// Sidebar: editor-picked «پربازدید» first; otherwise the next newest items.
+	const trending = (trendingItems ?? []).filter(notShown).slice(0, SIDEBAR_COUNT)
+	const sidebarIsTrending = trending.length > 0
+	const sidebar = sidebarIsTrending
+		? trending
+		: feedItems.filter(notShown).slice(0, SIDEBAR_COUNT)
+	sidebar.forEach((item) => shown.add(item.slug))
+
+	// Rail: manually «تازه»-tagged items pinned first, then the date feed.
+	const railSource = [...(pinnedLatestItems ?? []), ...feedItems]
+	const rail: NewsListItem[] = []
+	for (const item of railSource) {
+		if (rail.length >= RAIL_COUNT) break
+		if (shown.has(item.slug)) continue
+		shown.add(item.slug)
+		rail.push(item)
+	}
 
 	const spotlightCategory = categories[0]
 	// Same treatment for the category section: a failed read empties that one
@@ -131,9 +178,8 @@ export default async function HomePage() {
 			})
 		: null
 
-	const alreadyShown = new Set(feedItems.map((item) => item.slug))
 	const spotlightItems = (spotlightFeedItems ?? []).filter(
-		(item) => !alreadyShown.has(item.slug),
+		(item) => !shown.has(item.slug),
 	)
 	const spotlightCards = spotlightItems.slice(0, SPOTLIGHT_CARDS)
 	const spotlightRows = spotlightItems.slice(
@@ -143,36 +189,46 @@ export default async function HomePage() {
 
 	return (
 		<>
-			<section className="mb-10 grid grid-cols-1 gap-6 lg:grid-cols-3">
-				<div className={sidebar.length > 0 ? "lg:col-span-2" : "lg:col-span-3"}>
-					<FeaturedNews news={featured} />
-				</div>
+			{/* The slides use <h2>; the page keeps exactly one <h1>. */}
+			<h1 className="sr-only">رحیق خبر — تازه‌ترین اخبار ایران، سیاست و منطقه</h1>
+			{/* Group 3: homepage views feed the site-wide dashboard totals. */}
+			<ViewTracker />
 
-				{sidebar.length > 0 ? (
-					<aside>
-						<SectionHeading title="تازه‌ترین خبرها" marker="link" size="sm" />
-						<div className="flex flex-col">
-							{sidebar.map((item, index) => (
-								<RankedNewsRow key={item.slug} news={item} rank={index + 1} />
-							))}
-						</div>
-					</aside>
-				) : null}
-			</section>
+			{/* Group 1 — full-width slider of «اصلی» articles (static when only one). */}
+			<FeaturedSlider items={slides} />
 
-			{rail.length > 0 ? (
-				<section className="mb-10">
-					{/* The mockup puts a "مشاهده همه" link here. There is no global
-					    archive route in this stage, so the link is omitted rather than
-					    pointed at a page that does not exist. */}
-					<SectionHeading title="آخرین اخبار" />
-					<div className="no-scrollbar -mx-4 flex gap-4 overflow-x-auto px-4 pb-2">
-						{rail.map((item) => (
-							<div key={item.slug} className="w-[260px] shrink-0">
-								<NewsCard news={item} variant="rail" sizes="260px" />
+			{rail.length > 0 || sidebar.length > 0 ? (
+				<section className="mb-10 grid grid-cols-1 gap-6 lg:grid-cols-3">
+					{rail.length > 0 ? (
+						<div className={sidebar.length > 0 ? "min-w-0 lg:col-span-2" : "min-w-0 lg:col-span-3"}>
+							{/* The mockup puts a "مشاهده همه" link here. There is no global
+							    archive route in this stage, so the link is omitted rather than
+							    pointed at a page that does not exist. */}
+							<SectionHeading title="آخرین اخبار" />
+							<div className="no-scrollbar -mx-4 flex gap-4 overflow-x-auto px-4 pb-2">
+								{rail.map((item) => (
+									<div key={item.slug} className="w-[260px] shrink-0">
+										<NewsCard news={item} variant="rail" sizes="260px" />
+									</div>
+								))}
 							</div>
-						))}
-					</div>
+						</div>
+					) : null}
+
+					{sidebar.length > 0 ? (
+						<aside className={rail.length > 0 ? "" : "lg:col-span-3"}>
+							<SectionHeading
+								title={sidebarIsTrending ? "پربازدیدترین‌ها" : "تازه‌ترین خبرها"}
+								marker="link"
+								size="sm"
+							/>
+							<div className="flex flex-col">
+								{sidebar.map((item, index) => (
+									<RankedNewsRow key={item.slug} news={item} rank={index + 1} />
+								))}
+							</div>
+						</aside>
+					) : null}
 				</section>
 			) : null}
 

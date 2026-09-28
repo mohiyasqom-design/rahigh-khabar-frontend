@@ -43,6 +43,23 @@ export const ACCEPTED_IMAGE_MIME_TYPES = [
 	"image/webp",
 ] as const
 
+/**
+ * Group 3: value for `<input accept>`. Extensions are listed as well, because
+ * some OSes report "", "image/jpg" or "image/pjpeg" for .jpg/.jpeg files and
+ * a MIME-only list hid them in the file dialog.
+ */
+export const ACCEPTED_IMAGE_INPUT = "image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
+
+const MIME_ALIASES = new Set(["image/jpeg", "image/jpg", "image/pjpeg", "image/png", "image/x-png", "image/webp"])
+const IMAGE_EXTENSION = /\.(jpe?g|png|webp)$/i
+
+/** Pre-flight only: the backend magic-byte check is the real gate. */
+export function isAcceptedImageFile(file: File): boolean {
+	const type = file.type.toLowerCase()
+	if (MIME_ALIASES.has(type)) return true
+	return (type === "" || type === "application/octet-stream") && IMAGE_EXTENSION.test(file.name)
+}
+
 /** Backend default for `MAX_UPLOAD_SIZE_BYTES` (5 MiB). */
 const DEFAULT_MAX_UPLOAD_SIZE_BYTES = 5_242_880
 
@@ -78,8 +95,8 @@ export function megabytes(bytes: number): number {
 export function describeFileProblem(file: File): string | null {
 	const limit = maxUploadSizeBytes()
 
-	if (!ACCEPTED_IMAGE_MIME_TYPES.includes(file.type as (typeof ACCEPTED_IMAGE_MIME_TYPES)[number])) {
-		return "فقط تصویر JPEG، PNG یا WebP پذیرفته می‌شود."
+	if (!isAcceptedImageFile(file)) {
+		return "فقط تصویر JPG/JPEG، PNG یا WebP پذیرفته می‌شود."
 	}
 
 	if (file.size > limit) {

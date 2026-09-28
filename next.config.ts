@@ -59,7 +59,14 @@ function coverImagePatterns(): RemotePatterns {
 const nextConfig: NextConfig = {
 	reactStrictMode: true,
 	images: {
-		remotePatterns: coverImagePatterns(),
+		// Group 1: the production media host is allowed explicitly as well, so
+		// slider/cover images keep working even if the build-time API URL uses
+		// a different (e.g. internal Railway) host. Path stays pinned to /uploads/.
+		remotePatterns: [
+			...coverImagePatterns(),
+			{ protocol: "https", hostname: "rahighkhabar.ir", pathname: "/uploads/**" },
+			{ protocol: "https", hostname: "**.rahighkhabar.ir", pathname: "/uploads/**" },
+		],
 	},
 }
 
