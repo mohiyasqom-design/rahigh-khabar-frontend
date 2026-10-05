@@ -115,7 +115,7 @@ export default function FeaturedSlider({ items }: { items: NewsListItem[] }) {
 
 	const dragging = dragPx !== 0
 	const trackStyle = {
-		transform: `translate3d(calc(${-index * 100\}% + ${dragPx}px), 0, 0)`,
+		transform: `translate3d(calc(${-index * 100}% + ${dragPx}px), 0, 0)`,
 	}
 
 	return (
