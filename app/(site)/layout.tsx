@@ -27,14 +27,14 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
 	return (
 		<>
 			<Header />
+			{/* STAGE 10 PART 5 — the push opt-in bar. Public chrome only (never in
+			    `/admin`); renders nothing unless push is supported, configured and
+			    not yet enabled/dismissed. It sits outside <main> so the homepage
+			    slider can touch the header edge when no banner is shown. */}
+			<PushBanner />
 			{/* py matches the mockup's main column (py-8) instead of the wider
 			    Stage 6 placeholder spacing, which pushed the hero too far down. */}
 			<main className="mx-auto w-full max-w-shell flex-1 px-4 py-8 sm:py-10">
-				{/* STAGE 10 PART 5 — the push opt-in bar. It lives inside the public
-				    chrome only (never in `/admin`) and renders nothing at all unless
-				    the browser supports push AND the backend reports configured VAPID
-				    keys, so pages look unchanged when push is off. */}
-				<PushBanner />
 				{children}
 			</main>
 			<Footer />
