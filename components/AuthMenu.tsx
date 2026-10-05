@@ -12,8 +12,8 @@ import type { Session } from "@/types/auth"
  *
  * WHY THE CHECK RUNS IN THE BROWSER: the visitor cookie is scoped to the API
  * origin, so a Next.js Server Component has nothing to forward (the same
- * reasoning as `lib/auth.ts` and `components/admin/session.tsx`). The header
- * is also rendered inside statically cached pages, so a server-side answer would
+ * reasoning as `lib/auth.ts` and `components/admin/session.tsx`). The header is
+ * also rendered inside statically cached pages, so a server-side answer would
  * be baked into the HTML for every reader. One credentialed `GET /users/me`
  * after mount is the only honest way to know.
  *
