@@ -7,36 +7,6 @@ import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type Touc
 import NewsTime from "@/components/NewsTime"
 import type { NewsListItem } from "@/types/news"
 
-/**
- * Group 1 — full-width, auto-advancing slider of «اصلی» (featured) articles at
- * the top of the homepage. Replaces the single-story hero.
- *
- * NO LIBRARY: a transform-based track (~200 lines) is lighter than any
- * carousel package, so no dependency was added.
- *
- * BEHAVIOUR
- *   - auto-advances every AUTO_ADVANCE_MS; the timer is re-armed after every
- *     slide change, so a manual jump or swipe is never followed by an instant
- *     second jump;
- *   - pauses while hovered, while keyboard focus is inside, while a finger is
- *     on it, while the tab is hidden, and entirely under prefers-reduced-motion;
- *   - dots jump straight to a slide;
- *   - swipe: the track follows the finger (transform only), and on release a
- *     swipe to the LEFT shows the next slide, to the RIGHT the previous one —
- *     as the brief specifies for this RTL site. To keep the motion consistent
- *     with that gesture, the track (and the dots) are laid out left-to-right
- *     internally while every slide's content stays dir="rtl";
- *   - `touch-action: pan-y` keeps vertical page scrolling native.
- *
- * FALLBACKS (decided by the caller, handled here): one item renders as a
- * static hero with no dots, timer or gestures; zero items renders nothing.
- * A missing/broken cover shows a branded navy placeholder, never a broken box.
- *
- * PERFORMANCE: only `transform`/`opacity` animate. Slide 1's image is
- * `priority` (it is the LCP element); others lazy-load, except that the NEXT
- * slide is switched to eager loading so it is ready before it slides in.
- */
-
 const AUTO_ADVANCE_MS = 6000
 const SWIPE_THRESHOLD_PX = 50
 
@@ -62,7 +32,6 @@ export default function FeaturedSlider({ items }: { items: NewsListItem[] }) {
 		[count],
 	)
 
-	// Keep the index valid if the list shrinks between renders.
 	useEffect(() => {
 		if (index >= count && count > 0) setIndex(0)
 	}, [count, index])
@@ -94,8 +63,6 @@ export default function FeaturedSlider({ items }: { items: NewsListItem[] }) {
 
 	if (count === 0) return null
 
-	/* ------------------------------ gestures ------------------------------ */
-
 	const onTouchStart = (event: TouchEvent<HTMLDivElement>) => {
 		const touch = event.touches[0]
 		if (!touch) return
@@ -111,7 +78,6 @@ export default function FeaturedSlider({ items }: { items: NewsListItem[] }) {
 		const dx = touch.clientX - start.x
 		const dy = touch.clientY - start.y
 
-		// Decide once per gesture whether it is a horizontal swipe or a scroll.
 		if (start.horizontal === null && (Math.abs(dx) > 8 || Math.abs(dy) > 8)) {
 			start.horizontal = Math.abs(dx) > Math.abs(dy)
 		}
@@ -128,7 +94,6 @@ export default function FeaturedSlider({ items }: { items: NewsListItem[] }) {
 		const threshold = Math.min(SWIPE_THRESHOLD_PX, width / 4 || SWIPE_THRESHOLD_PX)
 
 		if (start?.horizontal && Math.abs(dragPx) > threshold) {
-			// Left swipe (finger moves left, dx < 0) -> next slide.
 			goTo(dragPx < 0 ? index + 1 : index - 1)
 		}
 
@@ -157,7 +122,7 @@ export default function FeaturedSlider({ items }: { items: NewsListItem[] }) {
 		<section
 			aria-roledescription="carousel"
 			aria-label="اخبار اصلی"
-			className="relative mb-10 overflow-hidden rounded-md bg-ink"
+			className="relative left-1/2 -mt-8 mb-10 w-screen -translate-x-1/2 overflow-hidden bg-ink sm:-mt-10"
 			onMouseEnter={() => setHovered(true)}
 			onMouseLeave={() => setHovered(false)}
 			onFocus={() => setFocused(true)}
@@ -169,9 +134,7 @@ export default function FeaturedSlider({ items }: { items: NewsListItem[] }) {
 			<div
 				ref={trackRef}
 				dir="ltr"
-				className={`flex will-change-transform ${
-					dragging || reducedMotion ? "" : "transition-transform duration-700 ease-out"
-				}`}
+				className={`flex will-change-transform ${dragging || reducedMotion ? "" : "transition-transform duration-700 ease-out"}`}
 				style={{ ...trackStyle, touchAction: "pan-y" }}
 				onTouchStart={interactive ? onTouchStart : undefined}
 				onTouchMove={interactive ? onTouchMove : undefined}
@@ -197,13 +160,9 @@ export default function FeaturedSlider({ items }: { items: NewsListItem[] }) {
 			</div>
 
 			{interactive ? (
-				<div
-					dir="ltr"
-					className="absolute inset-x-0 bottom-3 z-10 flex items-center justify-center gap-2"
-				>
+				<div dir="ltr" className="absolute inset-x-0 bottom-2 z-10 flex items-center justify-center gap-1.5">
 					{items.map((news, dotIndex) => {
 						const active = dotIndex === index
-
 						return (
 							<button
 								key={news.slug}
@@ -211,15 +170,9 @@ export default function FeaturedSlider({ items }: { items: NewsListItem[] }) {
 								onClick={() => goTo(dotIndex)}
 								aria-label={`نمایش خبر ${(dotIndex + 1).toLocaleString("fa-IR")} از ${count.toLocaleString("fa-IR")}`}
 								aria-current={active ? "true" : undefined}
-								className="group flex h-6 w-6 items-center justify-center rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+								className="group flex h-6 w-12 items-center justify-center focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
 							>
-								<span
-									className={`block h-2.5 w-2.5 rounded-full transition-[transform,opacity,background-color] duration-300 ${
-										active
-											? "scale-125 bg-accent opacity-100"
-											: "bg-white opacity-60 group-hover:opacity-90"
-									}`}
-								/>
+								<span className={`block h-[3px] w-full rounded-full transition-[opacity,background-color] duration-300 ${active ? "bg-white opacity-100" : "bg-white opacity-40 group-hover:opacity-70"}`} />
 							</button>
 						)
 					})}
@@ -260,44 +213,32 @@ function Slide({
 		>
 			<Link
 				href={`/news/${news.slug}`}
-				className="group relative block aspect-[4/3] overflow-hidden bg-ink sm:aspect-[16/9] lg:aspect-[21/9]"
+				className="group relative block aspect-[16/9] overflow-hidden bg-ink lg:aspect-[2/1] lg:max-h-[640px]"
 			>
 				{showImage && news.coverImage ? (
 					<Image
 						src={news.coverImage.url}
 						alt={news.coverImage.altText ?? ""}
 						fill
-						sizes="(max-width: 1180px) 100vw, 1180px"
-						{...(priority
-							? { priority: true }
-							: { loading: (eager ? "eager" : "lazy") as "eager" | "lazy" })}
+						sizes="100vw"
+						{...(priority ? { priority: true } : { loading: (eager ? "eager" : "lazy") as "eager" | "lazy" })}
 						onError={() => setBroken(true)}
 						className="object-cover transition-transform duration-700 group-hover:scale-[1.03]"
 					/>
 				) : (
 					<SlidePlaceholder />
 				)}
-
-				{/* Dark bottom gradient keeps the white headline readable on any photo. */}
-				<div
-					className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent"
-					aria-hidden="true"
-				/>
-
-				<div className="absolute inset-x-0 bottom-0 p-4 pb-10 sm:p-6 sm:pb-12 lg:p-8 lg:pb-14">
-					{category ? (
-						<span className="inline-block rounded-sm bg-accent px-2.5 py-1 text-[11px] font-bold text-on-accent">
-							{category.name}
-						</span>
-					) : null}
-
-					<h2 className="mt-3 line-clamp-3 max-w-4xl text-xl font-extrabold leading-[1.4] tracking-headline text-paper sm:text-2xl md:text-[32px]">
-						{news.title}
-					</h2>
-
-					<div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-white/75">
-						<span>{news.author.displayName}</span>
-						{news.publishedAt ? <NewsTime value={news.publishedAt} /> : null}
+				<div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent" aria-hidden="true" />
+				<div className="absolute inset-x-0 bottom-0">
+					<div className="mx-auto max-w-shell px-4 pb-9 sm:pb-11 lg:pb-14">
+						{category ? (
+							<span className="inline-block rounded-sm bg-accent px-2.5 py-1 text-[11px] font-bold text-on-accent">{category.name}</span>
+						) : null}
+						<h2 className="mt-3 line-clamp-3 max-w-4xl text-lg font-extrabold leading-[1.5] tracking-headline text-paper sm:text-2xl md:text-[32px]">{news.title}</h2>
+						<div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-white/75">
+							<span>{news.author.displayName}</span>
+							{news.publishedAt ? <NewsTime value={news.publishedAt} /> : null}
+						</div>
 					</div>
 				</div>
 			</Link>
@@ -305,18 +246,10 @@ function Slide({
 	)
 }
 
-/** Branded stand-in for a missing or unreachable cover image. */
 function SlidePlaceholder() {
 	return (
 		<div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-ink via-ink to-black">
-			<Image
-				src="/logo-rahigh-khabar-gold.png"
-				alt=""
-				width={1175}
-				height={745}
-				sizes="220px"
-				className="h-24 w-auto object-contain opacity-30 sm:h-32"
-			/>
+			<Image src="/logo-rahigh-khabar-gold.png" alt="" width={1175} height={745} sizes="220px" className="h-24 w-auto object-contain opacity-30 sm:h-32" />
 		</div>
 	)
 }
