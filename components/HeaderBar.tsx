@@ -87,6 +87,8 @@ export default function HeaderBar({ categories }: { categories: Category[] }) {
 			<div className="mx-auto max-w-shell px-4">
 				<div className="flex h-[72px] items-center gap-2 sm:h-header">
 					<div className="flex flex-1 items-center justify-start">
+						{/* Always rendered: even with no categories the menu still
+						    holds the search field. */}
 						<button
 							type="button"
 							onClick={() => setMenuOpen((open) => !open)}
@@ -116,17 +118,26 @@ export default function HeaderBar({ categories }: { categories: Category[] }) {
 					</Link>
 
 					<div className="flex flex-1 items-center justify-end gap-2">
+						{/* Stage 10 Part 2: the Google sign-in entry point. */}
 						<AuthMenu />
 					</div>
 				</div>
 			</div>
 
+			{/* Group 1 — slim horizontal category strip, on every public page. */}
 			{hasCategories ? <CategoryStrip links={links} isCurrent={isCurrent} /> : null}
 
 			{menuOpen ? (
-				<div id={menuId} className="border-t border-white/10 bg-ink">
+				<div
+					id={menuId}
+					className="border-t border-white/10 bg-ink"
+				>
 					<div className="mx-auto max-w-shell px-4 py-4">
+						{/* Group 1 — search lives at the top of the menu panel. Not
+						    auto-focused, so opening the menu on a phone does not
+						    pop the keyboard over the category list. */}
 						<HeaderSearch autoFocus={false} />
+
 						{hasCategories ? (
 							<nav aria-label="دسته‌بندی‌ها" className="mt-4 border-t border-white/10 pt-2">
 								<ul className="grid grid-cols-1 gap-x-4 sm:grid-cols-2 lg:grid-cols-4">
