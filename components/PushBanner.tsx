@@ -12,6 +12,29 @@ import {
 	isStandaloneDisplay,
 } from "@/lib/push"
 
+/**
+ * Stage 10 Part 5 — the push permission prompt.
+ *
+ * NOTHING IS ASKED AUTOMATICALLY. `Notification.requestPermission()` must run
+ * inside a user gesture (Safari ignores it otherwise, and Chrome blocks
+ * repeated automatic prompts permanently), so the banner only shows a button
+ * and the permission request happens in its click handler.
+ *
+ * THE BANNER HIDES ITSELF in every case where it could not work, instead of
+ * showing a button that fails:
+ *   - the browser has no Push API (or the page is in a private window);
+ *   - `GET /push/public-key` reports `enabled: false`, i.e. the server has no
+ *     VAPID keys configured — asking for permission would waste the one
+ *     chance the site gets;
+ *   - permission was already denied: the browser will not ask again, so the
+ *     reader is told to change it in site settings rather than clicking a
+ *     dead button;
+ *   - iOS Safari outside an installed app, where subscribing is impossible;
+ *     there the banner explains the «Add to Home Screen» requirement.
+ *
+ * The dismissal is remembered in `localStorage` so the bar does not reappear
+ * on every page view for someone who said no.
+ */
 const DISMISS_KEY = "rk:push-dismissed"
 
 type Phase =
@@ -33,15 +56,22 @@ export default function PushBanner() {
 
 		async function bootstrap() {
 			if (!isPushSupported()) {
+				// iOS Safari exposes no PushManager until the site is installed, so
+				// the "install first" hint has to be distinguished from a browser
+				// that will never support push.
 				if (active) {
 					setPhase(isIosSafari() && !isStandaloneDisplay() ? "needs-install" : "hidden")
 				}
+
 				return
 			}
 
 			try {
 				const key = await getPushPublicKey()
-				if (!active) return
+
+				if (!active) {
+					return
+				}
 
 				if (!key.enabled || !key.publicKey) {
 					setPhase("hidden")
@@ -49,8 +79,12 @@ export default function PushBanner() {
 				}
 
 				setPublicKey(key.publicKey)
+
 				const existing = await getExistingSubscription()
-				if (!active) return
+
+				if (!active) {
+					return
+				}
 
 				if (existing) {
 					setPhase("subscribed")
@@ -65,24 +99,32 @@ export default function PushBanner() {
 				const dismissed = window.localStorage.getItem(DISMISS_KEY) === "1"
 				setPhase(dismissed ? "hidden" : "offer")
 			} catch {
-				if (active) setPhase("hidden")
+				// A failing key endpoint means push cannot be offered; that is not
+				// something the reader can act on, so the banner stays hidden.
+				if (active) {
+					setPhase("hidden")
+				}
 			}
 		}
 
 		void bootstrap()
+
 		return () => {
 			active = false
 		}
 	}, [])
 
 	const subscribe = useCallback(async () => {
-		if (!publicKey || busy) return
+		if (!publicKey || busy) {
+			return
+		}
 
 		setBusy(true)
 		setError(null)
 
 		try {
 			const result = await enablePush(publicKey)
+
 			if (result === "subscribed") {
 				setPhase("subscribed")
 				window.localStorage.removeItem(DISMISS_KEY)
@@ -106,9 +148,9 @@ export default function PushBanner() {
 	if (phase === "needs-install") {
 		return (
 			<Frame>
-				<div className={shell} role="note">
-					برای دریافت اعلان خبرهای فوری در این مرورگر، باید ابتدا سایت را از منوی اشتراک‌گذاری به صفحهٔ اصلی دستگاه اضافه کنید.
-				</div>
+			<div className={shell} role="note">
+				برای دریافت اعلان خبرهای فوری در این مرورگر، باید ابتدا سایت را از منوی اشتراک‌گذاری به صفحهٔ اصلی دستگاه اضافه کنید.
+			</div>
 			</Frame>
 		)
 	}
@@ -116,47 +158,51 @@ export default function PushBanner() {
 	if (phase === "denied") {
 		return (
 			<Frame>
-				<div className={shell} role="note">
-					اجازهٔ اعلان در این مرورگر رد شده است. برای فعال‌سازی، از تنظیمات سایت در مرورگر اجازهٔ اعلان را روی حالت مجاز بگذارید.
-				</div>
+			<div className={shell} role="note">
+				اجازهٔ اعلان در این مرورگر رد شده است. برای فعال‌سازی، از تنظیمات سایت در مرورگر اجازهٔ اعلان را روی حالت مجاز بگذارید.
+			</div>
 			</Frame>
 		)
 	}
 
 	return (
 		<Frame>
-			<div className={`${shell} flex flex-wrap items-center justify-between gap-3`}>
-				<span>اعلان خبرهای فوری رحیق خبر را روی این دستگاه فعال کنید؟</span>
-				<span className="flex items-center gap-2">
-					<button
-						type="button"
-						onClick={subscribe}
-						disabled={busy}
-						className="rounded-md bg-accent px-4 py-1.5 text-xs font-semibold text-on-accent transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
-					>
-						{busy ? "در حال فعال‌سازی…" : "فعال‌سازی اعلان"}
-					</button>
-					<button
-						type="button"
-						onClick={() => {
-							window.localStorage.setItem(DISMISS_KEY, "1")
-							setPhase("hidden")
-						}}
-						className="rounded-md border border-border px-3 py-1.5 text-xs text-muted-dark transition-colors hover:border-border-strong"
-					>
-						فعلاً نه
-					</button>
-				</span>
-				{error ? (
-					<p role="alert" className="w-full text-xs text-accent-strong">
-						{error}
-					</p>
-				) : null}
-			</div>
+		<div className={`${shell} flex flex-wrap items-center justify-between gap-3`}>
+			<span>اعلان خبرهای فوری رحیق خبر را روی این دستگاه فعال کنید؟</span>
+
+			<span className="flex items-center gap-2">
+				<button
+					type="button"
+					onClick={subscribe}
+					disabled={busy}
+					className="rounded-md bg-accent px-4 py-1.5 text-xs font-semibold text-on-accent transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+				>
+					{busy ? "در حال فعال‌سازی…" : "فعال‌سازی اعلان"}
+				</button>
+
+				<button
+					type="button"
+					onClick={() => {
+						window.localStorage.setItem(DISMISS_KEY, "1")
+						setPhase("hidden")
+					}}
+					className="rounded-md border border-border px-3 py-1.5 text-xs text-muted-dark transition-colors hover:border-border-strong"
+				>
+					فعلاً نه
+				</button>
+			</span>
+
+			{error ? (
+				<p role="alert" className="w-full text-xs text-accent-strong">
+					{error}
+				</p>
+			) : null}
+		</div>
 		</Frame>
 	)
 }
 
+/** Own container: the banner sits between the header and <main>. */
 function Frame({ children }: { children: ReactNode }) {
 	return <div className="mx-auto w-full max-w-shell px-4 py-4">{children}</div>
 }
