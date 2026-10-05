@@ -12,8 +12,8 @@ import type { Session } from "@/types/auth"
  *
  * WHY THE CHECK RUNS IN THE BROWSER: the visitor cookie is scoped to the API
  * origin, so a Next.js Server Component has nothing to forward (the same
- * reasoning as `lib/auth.ts` and `components/admin/session.tsx`). The header is
- * also rendered inside statically cached pages, so a server-side answer would
+ * reasoning as `lib/auth.ts` and `components/admin/session.tsx`). The header
+ * is also rendered inside statically cached pages, so a server-side answer would
  * be baked into the HTML for every reader. One credentialed `GET /users/me`
  * after mount is the only honest way to know.
  *
@@ -63,7 +63,7 @@ export default function AuthMenu() {
 
 	if (!ready) {
 		// Reserve the space so the header does not jump when the answer arrives.
-		return <div className="h-9 w-24" aria-hidden="true" />
+		return <div className="h-10 w-10" aria-hidden="true" />
 	}
 
 	if (!session) {
@@ -80,10 +80,10 @@ export default function AuthMenu() {
 		return (
 			<a
 				href={loginUrl}
-				className="flex h-9 items-center gap-2 rounded-full border border-white/15 px-3 text-sm text-paper transition-colors hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-paper"
+				aria-label="ورود یا ثبت‌نام با گوگل"
+				className="flex h-10 w-10 items-center justify-center rounded-full text-paper transition-colors hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
 			>
-				<GoogleIcon />
-				<span className="hidden sm:inline">ورود با گوگل</span>
+				<UserIcon />
 			</a>
 		)
 	}
@@ -109,10 +109,12 @@ export default function AuthMenu() {
 						alt=""
 						width={28}
 						height={28}
-						className="h-7 w-7 rounded-full object-cover"
+						className="h-8 w-8 rounded-full object-cover"
 						referrerPolicy="no-referrer"
 					/>
-				) : null}
+				) : (
+					<UserIcon />
+				)}
 				<span className="hidden max-w-[10rem] truncate sm:inline">
 					{session.displayName}
 				</span>
@@ -130,13 +132,23 @@ export default function AuthMenu() {
 	)
 }
 
-function GoogleIcon() {
+/** Zoomit-style outlined profile circle. */
+function UserIcon() {
 	return (
-		<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
-			<path
-				fill="currentColor"
-				d="M12 11v2.4h5.7c-.23 1.5-1.74 4.4-5.7 4.4A6.3 6.3 0 0 1 12 5.7c1.96 0 3.28.84 4.03 1.56l1.94-1.87A8.9 8.9 0 0 0 12 3a9 9 0 0 0 0 18c5.2 0 8.63-3.65 8.63-8.8 0-.6-.06-1.05-.15-1.5H12Z"
-			/>
+		<svg
+			width="32"
+			height="32"
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke="currentColor"
+			strokeWidth="1.8"
+			strokeLinecap="round"
+			strokeLinejoin="round"
+			aria-hidden="true"
+		>
+			<circle cx="12" cy="12" r="10" />
+			<circle cx="12" cy="9.5" r="3.3" />
+			<path d="M5.6 19c1.4-3 3.6-4.4 6.4-4.4s5 1.4 6.4 4.4" />
 		</svg>
 	)
 }
