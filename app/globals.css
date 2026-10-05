@@ -80,11 +80,15 @@
 		/* lang="fa" and dir="rtl" are set on <html> in app/layout.tsx, which is
 		   what Tailwind's logical utilities and rtl:/ltr: variants resolve against. */
 		-webkit-text-size-adjust: 100%;
+		/* The homepage slider is full-bleed (100vw); `clip` (unlike `hidden`)
+		   removes the scrollbar-width overflow without breaking sticky. */
+		overflow-x: clip;
 	}
 
 	body {
 		/* Approved base surface: paper background, ink text (see tailwind.config.ts). */
 		@apply bg-paper text-ink antialiased;
+		overflow-x: clip;
 	}
 
 	::selection {
