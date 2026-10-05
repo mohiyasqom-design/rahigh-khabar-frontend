@@ -115,7 +115,7 @@ export default function FeaturedSlider({ items }: { items: NewsListItem[] }) {
 
 	const dragging = dragPx !== 0
 	const trackStyle = {
-		transform: \`translate3d(calc($\{-index * 100\}% + $\{dragPx}px), 0, 0)\`,
+		transform: `translate3d(calc($\{-index * 100\}% + $\{dragPx}px), 0, 0)`,
 	}
 
 	return (
@@ -134,7 +134,7 @@ export default function FeaturedSlider({ items }: { items: NewsListItem[] }) {
 			<div
 				ref={trackRef}
 				dir="ltr"
-				className={\`flex will-change-transform $\{dragging || reducedMotion ? "" : "transition-transform duration-700 ease-out"}\`}
+				className={`flex will-change-transform $\{dragging || reducedMotion ? "" : "transition-transform duration-700 ease-out"}`}
 				style={{ ...trackStyle, touchAction: "pan-y" }}
 				onTouchStart={interactive ? onTouchStart : undefined}
 				onTouchMove={interactive ? onTouchMove : undefined}
@@ -172,12 +172,12 @@ export default function FeaturedSlider({ items }: { items: NewsListItem[] }) {
 								key={news.slug}
 								type="button"
 								onClick={() => goTo(dotIndex)}
-								aria-label={\`نمایش خبر $\{(dotIndex + 1).toLocaleString("fa-IR")} از $\{count.toLocaleString("fa-IR")}\`}
+								aria-label={`نمایش خبر $\{(dotIndex + 1).toLocaleString("fa-IR")} از $\{count.toLocaleString("fa-IR")}`}
 								aria-current={active ? "true" : undefined}
 								className="group flex h-6 w-12 items-center justify-center focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
 							>
 								<span
-									className={\`block h-[3px] w-full rounded-full transition-[opacity,background-color] duration-300 $\{active ? "bg-white opacity-100" : "bg-white opacity-40 group-hover:opacity-70"}\`}
+									className={`block h-[3px] w-full rounded-full transition-[opacity,background-color] duration-300 $\{active ? "bg-white opacity-100" : "bg-white opacity-40 group-hover:opacity-70"}`}
 								/>
 							</button>
 						)
@@ -212,13 +212,13 @@ function Slide({
 			dir="rtl"
 			role="group"
 			aria-roledescription="slide"
-			aria-label={\`$\{position.toLocaleString("fa-IR")} از $\{total.toLocaleString("fa-IR")}\`}
+			aria-label={`$\{position.toLocaleString("fa-IR")} از $\{total.toLocaleString("fa-IR")}`}
 			aria-hidden={active ? undefined : true}
 			inert={active ? undefined : true}
 			className="relative w-full shrink-0"
 		>
 			<Link
-				href={\`/news/$\{news.slug}\`}
+				href={`/news/$\{news.slug}`}
 				className="group relative block aspect-[16/9] overflow-hidden bg-ink lg:aspect-[2/1] lg:max-h-[640px]"
 			>
 				{showImage && news.coverImage ? (
