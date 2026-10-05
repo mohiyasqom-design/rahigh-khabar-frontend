@@ -10,6 +10,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: npm i -g @railway/cli
-      - run: railway up --ci --service 3a9e97d6-cacb-4be8-a196-4e2bf7858f0b
+      - run: railway up --ci --project f8ad679a-7e80-4e59-abec-a243e7b1512f --environment aecf669e-4a69-4655-8bfc-c527fa07dc86 --service 3a9e97d6-cacb-4be8-a196-4e2bf7858f0b
         env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_API_TOKEN: ${{ secrets.RAILWAY_API_TOKEN }}
